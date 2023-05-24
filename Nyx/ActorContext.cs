@@ -16,3 +16,17 @@ public sealed class ActorContext<TActor, TRequest, TResponse> where TActor : IAc
         Actor = actor;
     }
 }
+
+public sealed class ActorContext<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
+{
+    public bool Processing { get; set; }
+
+    public ConcurrentQueue<TRequest> Inbox { get; } = new();
+
+    public IActor<TRequest> Actor { get; }
+
+    public ActorContext(IActor<TRequest> actor)
+    {
+        Actor = actor;
+    }
+}

@@ -15,3 +15,18 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IActorRef<TActor, TR
         context.Inbox.Enqueue(message);
     }
 }
+
+public sealed class ActorRef<TActor, TRequest> : IActorRef<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
+{
+    private readonly ActorContext<TActor, TRequest> context;
+
+    public ActorRef(ActorContext<TActor, TRequest> context)
+    {
+        this.context = context;
+    }
+
+    public void Send(TRequest message)
+    {
+        context.Inbox.Enqueue(message);
+    }
+}

@@ -14,6 +14,13 @@ public sealed class ActorSystem
         return repository.Create(name);
     }
 
+    public IActorRef<TActor, TRequest> Create<TActor, TRequest>(string? name = null) where TActor : IActor<TRequest> where TRequest : class
+    {
+        ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
+
+        return repository.Create(name);
+    }
+
     public ActorRepository<TActor, TRequest, TResponse> GetRepository<TActor, TRequest, TResponse>() where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
         if (!repositories.TryGetValue(typeof(TActor), out IActorRepositoryRunnable? unitOfWorker))
@@ -24,6 +31,18 @@ public sealed class ActorSystem
         }
 
         return (ActorRepository<TActor, TRequest, TResponse>)unitOfWorker;
+    }
+
+    public ActorRepository<TActor, TRequest> GetRepository<TActor, TRequest>() where TActor : IActor<TRequest> where TRequest : class
+    {
+        if (!repositories.TryGetValue(typeof(TActor), out IActorRepositoryRunnable? unitOfWorker))
+        {
+            ActorRepository<TActor, TRequest> newUnitOfWork = new(this);
+            repositories.TryAdd(typeof(TActor), newUnitOfWork);
+            return newUnitOfWork;
+        }
+
+        return (ActorRepository<TActor, TRequest>)unitOfWorker;
     }
 
     public async Task Run()

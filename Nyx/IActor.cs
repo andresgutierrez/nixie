@@ -5,3 +5,9 @@ public interface IActor<TRequest, TResponse> where TRequest : class where TRespo
 {
     public Task<TResponse> Receive(TRequest message);
 }
+
+
+public interface IActor<TRequest> where TRequest : class
+{
+    public Task Receive(TRequest message);
+}
