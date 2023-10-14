@@ -15,18 +15,60 @@ public sealed class ActorContext<TActor, TRequest, TResponse> where TActor : IAc
     {
         Actor = actor;
     }
+
+    public void SendAndTryRun(TRequest message)
+    {
+        Inbox.Enqueue(message);
+
+        if (!Processing)
+            _ = Task.Run(RunActor);
+    }
+
+    private async Task RunActor()
+    {
+        if (Processing)
+            return;
+
+        Processing = true;
+
+        while (Inbox.TryDequeue(out TRequest? message))
+            await Actor.Receive(message);
+
+        Processing = false;
+    }
 }
 
 public sealed class ActorContext<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
 {
-    public bool Processing { get; set; }
+    public string Name { get; }
+
+    private int processing = 1;
 
     public ConcurrentQueue<TRequest> Inbox { get; } = new();
 
     public IActor<TRequest> Actor { get; }
 
-    public ActorContext(IActor<TRequest> actor)
+    public bool Processing => processing == 1;
+
+    public ActorContext(string name, IActor<TRequest> actor)
     {
+        Name = name;
         Actor = actor;
+    }
+
+    public void SendAndTryRun(TRequest message)
+    {
+        Inbox.Enqueue(message);
+
+        if (1 == Interlocked.Exchange(ref processing, 0))
+            _ = Task.Run(RunActor);
+    }
+
+    private async Task RunActor()
+    {
+        while (Inbox.TryDequeue(out TRequest? message))
+            await Actor.Receive(message);
+
+        Interlocked.Exchange(ref processing, 1);
     }
 }

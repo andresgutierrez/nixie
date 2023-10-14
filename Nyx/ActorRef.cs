@@ -12,7 +12,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IActorRef<TActor, TR
 
     public void Send(TRequest message)
     {
-        context.Inbox.Enqueue(message);
+        context.SendAndTryRun(message);
     }
 }
 
@@ -27,6 +27,6 @@ public sealed class ActorRef<TActor, TRequest> : IActorRef<TActor, TRequest> whe
 
     public void Send(TRequest message)
     {
-        context.Inbox.Enqueue(message);
+        context.SendAndTryRun(message);
     }
 }

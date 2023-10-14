@@ -45,12 +45,24 @@ public sealed class ActorSystem
         return (ActorRepository<TActor, TRequest>)unitOfWorker;
     }
 
-    public async Task Run()
+    public async Task Wait()
     {
-        foreach (KeyValuePair<Type, IActorRepositoryRunnable> keyValuePair in repositories)
+        while (true)
         {
-            while (keyValuePair.Value.HasPendingMessages())
-                await keyValuePair.Value.Run();
+            bool completed = true;
+
+            foreach (KeyValuePair<Type, IActorRepositoryRunnable> x in repositories)
+            {
+                if (x.Value.HasPendingMessages() || x.Value.IsProcessing())
+                {
+                    await Task.Yield();
+                    completed = false;
+                    break;
+                }
+            }
+
+            if (completed)
+                break;
         }
     }
 }

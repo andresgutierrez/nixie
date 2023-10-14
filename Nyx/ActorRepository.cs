@@ -7,7 +7,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
 {
     private readonly ActorSystem actorSystem;
 
-    public ConcurrentDictionary<string, ActorContext<TActor, TRequest, TResponse>> actors = new();
+    private readonly ConcurrentDictionary<string, ActorContext<TActor, TRequest, TResponse>> actors = new();
 
     public ActorRepository(ActorSystem actorSystem)
     {
@@ -19,6 +19,16 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         foreach (KeyValuePair<string, ActorContext<TActor, TRequest, TResponse>> context in actors)
         {
             if (!context.Value.Inbox.IsEmpty)
+                return true;
+        }
+        return false;
+    }
+
+    public bool IsProcessing()
+    {
+        foreach (KeyValuePair<string, ActorContext<TActor, TRequest, TResponse>> context in actors)
+        {
+            if (context.Value.Processing)
                 return true;
         }
         return false;
@@ -52,32 +62,14 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         actors.TryAdd(name, context);
 
         return actorRef;
-    }
-
-    public async Task Run()
-    {
-        foreach (KeyValuePair<string, ActorContext<TActor, TRequest, TResponse>> context in actors)
-        {
-            if (context.Value.Processing)
-                continue;
-
-            if (!context.Value.Inbox.TryDequeue(out TRequest? request))
-                continue;
-
-            context.Value.Processing = true;
-
-            await context.Value.Actor.Receive(request);
-
-            context.Value.Processing = false;
-        }
-    }
+    }   
 }
 
 public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable where TActor : IActor<TRequest> where TRequest : class
 {
     private readonly ActorSystem actorSystem;
 
-    public ConcurrentDictionary<string, ActorContext<TActor, TRequest>> actors = new();
+    private readonly ConcurrentDictionary<string, ActorContext<TActor, TRequest>> actors = new();
 
     public ActorRepository(ActorSystem actorSystem)
     {
@@ -89,6 +81,16 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
         foreach (KeyValuePair<string, ActorContext<TActor, TRequest>> context in actors)
         {
             if (!context.Value.Inbox.IsEmpty)
+                return true;
+        }
+        return false;
+    }
+
+    public bool IsProcessing()
+    {
+        foreach (KeyValuePair<string, ActorContext<TActor, TRequest>> context in actors)
+        {
+            if (!context.Value.Processing)
                 return true;
         }
         return false;
@@ -112,7 +114,7 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
         if (actor is null)
             throw new Exception("Invalid actor");
 
-        ActorContext<TActor, TRequest> context = new(actor);
+        ActorContext<TActor, TRequest> context = new(name, actor);
 
         ActorRef<TActor, TRequest>? actorRef = (ActorRef<TActor, TRequest>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest>), context);
 
@@ -122,23 +124,5 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
         actors.TryAdd(name, context);
 
         return actorRef;
-    }
-
-    public async Task Run()
-    {
-        foreach (KeyValuePair<string, ActorContext<TActor, TRequest>> context in actors)
-        {
-            if (context.Value.Processing)
-                continue;
-
-            if (!context.Value.Inbox.TryDequeue(out TRequest? request))
-                continue;
-
-            context.Value.Processing = true;
-
-            await context.Value.Actor.Receive(request);
-
-            context.Value.Processing = false;
-        }
-    }
+    }   
 }
