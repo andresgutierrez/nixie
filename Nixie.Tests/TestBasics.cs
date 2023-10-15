@@ -1,7 +1,7 @@
 
-using Nyx.Tests.Actors;
+using Nixie.Tests.Actors;
 
-namespace Nyx.Tests;
+namespace Nixie.Tests;
 
 public sealed class TestBasics
 {

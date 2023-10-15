@@ -1,15 +1,15 @@
-# Nyx: A Lightweight Actor Model Implementation for C#/.NET
+# Nixie: A Lightweight Actor Model Implementation for C#/.NET
 
 ## Overview
 
-Nyx is a lightweight, high-performance implementation of the actor model tailored for the latest versions of C#/.NET. Developed with a focus on type safety, Nyx provides strongly-typed actors and takes full advantage of nullable support, thereby promoting a reduced error-prone codebase and bolstering performance. Built atop the Task Parallel Library (TPL) provided by .NET, it manages the lifecycle of actors diligently, ensuring a seamless and efficient concurrent programming experience.
+Nixie is a lightweight, high-performance implementation of the actor model tailored for the latest versions of C#/.NET. Developed with a focus on type safety, Nixie provides strongly-typed actors and takes full advantage of nullable support, thereby promoting a reduced error-prone codebase and bolstering performance. Built atop the Task Parallel Library (TPL) provided by .NET, it manages the lifecycle of actors diligently, ensuring a seamless and efficient concurrent programming experience.
 
 ## Features
 
 - **Strongly-Typed Actors:** Ensuring that your actor interactions are type-safe and as per expectations.
 - **Nullable Support:** Full support for nullability in line with the latest C# features, ensuring your code is robust and safeguarded against null reference issues.
-- **Lifecycle Management:** Nyx handles the meticulous management of actor lifecycle, allowing developers to focus on implementing logic.
-- **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nyx ensures that your actor systems are both scalable and performant.
+- **Lifecycle Management:** Nixie handles the meticulous management of actor lifecycle, allowing developers to focus on implementing logic.
+- **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nixie ensures that your actor systems are both scalable and performant.
 - **Less Error Prone:** The strongly-typed nature and nullability checks inherently make your actor system more reliable and resilient.
 - **Built on TPL:** Make the most out of the robust, scalable, and performant asynchronous programming features offered by TPL.
 
@@ -22,29 +22,29 @@ Nyx is a lightweight, high-performance implementation of the actor model tailore
 
 ### Installation
 
-To install Nyx into your C#/.NET project, you can use the .NET CLI or the NuGet Package Manager.
+To install Nixie into your C#/.NET project, you can use the .NET CLI or the NuGet Package Manager.
 
 #### Using .NET CLI
 
 ```shell
-dotnet add package Nyx --version [version_number]
+dotnet add package Nixie --version [version_number]
 ```
 
 ### Using NuGet Package Manager
 
-Search for Nyx and install it from the NuGet package manager UI, or use the Package Manager Console:
+Search for Nixie and install it from the NuGet package manager UI, or use the Package Manager Console:
 
 ```shell
-Install-Package Nyx -Version [version_number]
+Install-Package Nixie -Version [version_number]
 ```
 
 ## Usage
 
-Here's a basic example to get you started with Nyx. More comprehensive documentation and usage examples can be found in the /docs folder:
+Here's a basic example to get you started with Nixie. More comprehensive documentation and usage examples can be found in the /docs folder:
 
 
 ```csharp
-using Nyx;
+using Nixie;
 
 public class GreetMessage
 {
@@ -73,20 +73,20 @@ var system = new ActorSystem();
 
 var greeter = system.Create<GreeterActor, GreetMessage>();
 
-greeter.Send(new GreetMessage("Hello, Nyx!"));
+greeter.Send(new GreetMessage("Hello, Nixie!"));
 ```
 
 ## Contribution
 
-Nyx is an open-source project, and contributions are heartily welcomed! Whether you are looking to fix bugs, add new features, or improve documentation, your efforts and contributions will be appreciated. Check out the CONTRIBUTING.md file for guidelines on how to get started with contributing to Nyx.
+Nixie is an open-source project, and contributions are heartily welcomed! Whether you are looking to fix bugs, add new features, or improve documentation, your efforts and contributions will be appreciated. Check out the CONTRIBUTING.md file for guidelines on how to get started with contributing to Nixie.
 
 ## License
 
-Nyx is released under the MIT License.
+Nixie is released under the MIT License.
 
 ## Acknowledgements
 
 Sincere thanks to all contributors and the C#/.NET community for the continual support and inspiration.
 
 
-Let's build robust and efficient actor systems with Nyx! 🚀
+Let's build robust and efficient actor systems with Nixie! 🚀

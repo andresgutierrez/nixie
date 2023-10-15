@@ -1,7 +1,7 @@
 ﻿
 using System.Runtime.CompilerServices;
 
-namespace Nyx;
+namespace Nixie;
 
 public class LazyTaskMethodBuilder<T>
 {

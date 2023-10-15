@@ -1,5 +1,5 @@
 ﻿
-namespace Nyx;
+namespace Nixie;
 
 public sealed class ActorRef<TActor, TRequest> : IActorRef<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
 {

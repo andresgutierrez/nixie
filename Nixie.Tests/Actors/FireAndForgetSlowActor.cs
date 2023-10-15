@@ -1,14 +1,14 @@
 ﻿
-namespace Nyx.Tests.Actors;
+namespace Nixie.Tests.Actors;
 
-public sealed class ReplyActor : IActor<string, string>
+public sealed class FireAndForgetSlowActor : IActor<string>
 {
     private readonly Dictionary<string, int> receivedMessages = new();
 
-    public ReplyActor(IActorContext context)
+    public FireAndForgetSlowActor(IActorContext context)
     {
 
-    }
+    }    
 
     public int GetMessages(string id)
     {
@@ -26,10 +26,10 @@ public sealed class ReplyActor : IActor<string, string>
             receivedMessages[id]++;
     }
 
-    public Task<string> Receive(string message)
+    public async Task Receive(string message)
     {
-        IncrMessage(message);
+        await Task.Delay(1000);
 
-        return Task.FromResult(message);
+        IncrMessage(message);
     }
 }

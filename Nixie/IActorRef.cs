@@ -1,5 +1,5 @@
 ﻿
-namespace Nyx;
+namespace Nixie;
 
 public interface IActorRef<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
 {

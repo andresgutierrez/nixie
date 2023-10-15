@@ -1,7 +1,7 @@
 ﻿
 using System.Collections.Concurrent;
 
-namespace Nyx;
+namespace Nixie;
 
 /// <summary>
 /// The actor system encapsulates and encompasses all the actors and their references created. It is possible to have many independent actor systems running.

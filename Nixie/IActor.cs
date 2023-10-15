@@ -1,5 +1,5 @@
 ﻿
-namespace Nyx;
+namespace Nixie;
 
 public interface IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {

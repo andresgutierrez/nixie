@@ -1,7 +1,7 @@
 ﻿
 using System.Collections.Concurrent;
 
-namespace Nyx;
+namespace Nixie;
 
 public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {

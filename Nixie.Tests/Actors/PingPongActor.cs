@@ -1,5 +1,5 @@
 ﻿
-namespace Nyx.Tests.Actors;
+namespace Nixie.Tests.Actors;
 
 public sealed class PongActor : IActor<string, string>
 {

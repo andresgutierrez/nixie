@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>    
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>Nixie</PackageId>
+    <Version>0.0.1-alpha</Version>
+    <Description>A Lightweight Actor Model Implementation for C#/.NET</Description>
+    <Authors>Andres Gutierrez</Authors>
+    <Company>Andres Gutierrez</Company>    
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageDescription>Lightweight Actor system</PackageDescription>
+    <PackageProjectUrl>https://github.com/andresgutierrez/nyx</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/andresgutierrez/nyx</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>nyx;Nyx;orleans;grains;grain;akka;actors;actor model;Akka;concurrency</PackageTags>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

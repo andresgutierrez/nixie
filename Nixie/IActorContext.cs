@@ -1,5 +1,5 @@
 ﻿
-namespace Nyx;
+namespace Nixie;
 
 public interface IActorContext
 {

@@ -1,5 +1,5 @@
 ﻿
-namespace Nyx;
+namespace Nixie;
 
 /// <summary>
 /// Represents an actor reference.

@@ -1,7 +1,7 @@
 ﻿
 using System.Collections.Concurrent;
 
-namespace Nyx;
+namespace Nixie;
 
 /// <summary>
 /// This class maintains an inventory of created actors of a specific type, as well as references to the runners that contain the mailboxes.
@@ -9,12 +9,16 @@ namespace Nyx;
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
-public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorRepositoryRunnable where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable where TActor : IActor<TRequest> where TRequest : class
 {
     private readonly ActorSystem actorSystem;
+    
+    private readonly ConcurrentDictionary<string, (ActorRunner<TActor, TRequest> , ActorRef<TActor, TRequest>)> actors = new();
 
-    private readonly ConcurrentDictionary<string, (ActorRunner<TActor, TRequest, TResponse>, ActorRef<TActor, TRequest, TResponse>)> actors = new();
-
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    /// <param name="actorSystem"></param>
     public ActorRepository(ActorSystem actorSystem)
     {
         this.actorSystem = actorSystem;
@@ -26,7 +30,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     /// <returns></returns>
     public bool HasPendingMessages()
     {
-        foreach (KeyValuePair<string, (ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)> actor in actors)
+        foreach (KeyValuePair<string, (ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)> actor in actors)
         {
             if (!actor.Value.runner.Inbox.IsEmpty)
                 return true;
@@ -40,7 +44,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     /// <returns></returns>
     public bool IsProcessing()
     {
-        foreach (KeyValuePair<string, (ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)> actor in actors)
+        foreach (KeyValuePair<string, (ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)> actor in actors)
         {
             if (actor.Value.runner.Processing)
                 return true;
@@ -54,7 +58,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     /// <param name="name"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public IActorRef<TActor, TRequest, TResponse> Create(string? name = null)
+    public IActorRef<TActor, TRequest> Create(string? name = null)
     {
         if (!string.IsNullOrEmpty(name))
         {
@@ -74,9 +78,9 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         if (actor is null)
             throw new Exception("Invalid actor");
 
-        ActorRunner<TActor, TRequest, TResponse> runner = new(name, actor);
+        ActorRunner<TActor, TRequest> runner = new(name, actor);
 
-        ActorRef<TActor, TRequest, TResponse>? actorRef = (ActorRef<TActor, TRequest, TResponse>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest, TResponse>), runner);
+        ActorRef<TActor, TRequest>? actorRef = (ActorRef<TActor, TRequest>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest>), runner);
 
         if (actorRef is null)
             throw new Exception("Invalid props");
@@ -87,14 +91,14 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     }
 
     /// <summary>
-    /// Returns a reference to an existing actor or null if it doesn't exist
+    /// Returns a reference to an existing actor
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public IActorRef<TActor, TRequest, TResponse>? Get(string name)
+    public IActorRef<TActor, TRequest>? Get(string name)
     {
-        if (actors.TryGetValue(name, out (ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef) actorRef))
-            return actorRef.actorRef;
+        if (actors.TryGetValue(name, out (ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef) actor))
+            return actor.actorRef;
 
         return null;
     }

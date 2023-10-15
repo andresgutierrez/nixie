@@ -1,5 +1,6 @@
-Nyx/bin
-Nyx/obj
-Nyx/.vs
-Nyx.Tests/bin
-Nyx.Tests/obj
+Nixie/bin
+Nixie/obj
+Nixie/.vs
+Nixie.Tests/bin
+Nixie.Tests/obj
+.vs/

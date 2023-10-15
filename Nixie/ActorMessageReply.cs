@@ -1,5 +1,5 @@
 ﻿
-namespace Nyx;
+namespace Nixie;
 
 public sealed record ActorMessageReply<TRequest, TResponse>
 {
