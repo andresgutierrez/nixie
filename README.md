@@ -1,13 +1,15 @@
-# Nixie: A Lightweight Actor Model Implementation for C#/.NET
+# Nixie
+
+A Lightweight Actor Model Implementation for C#/.NET
 
 ## Overview
 
-Nixie is a lightweight, high-performance implementation of the actor model tailored for the latest versions of C#/.NET. Developed with a focus on type safety, Nixie provides strongly-typed actors and takes full advantage of nullable support, thereby promoting a reduced error-prone codebase and bolstering performance. Built atop the Task Parallel Library (TPL) provided by .NET, it manages the lifecycle of actors diligently, ensuring a seamless and efficient concurrent programming experience.
+Nixie is a lightweight, high-performance implementation of the [actor model](https://en.wikipedia.org/wiki/Actor_model) tailored for the latest versions of C#/.NET. Developed with a focus on type safety, Nixie provides strongly-typed actors and takes full advantage of nullable support, thereby promoting a reduced error-prone codebase and bolstering performance. Built atop the [Task Parallel Library (TPL)](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-parallel-library-tpl) provided by .NET, it manages the lifecycle of actors diligently, ensuring a seamless and efficient concurrent programming experience.
 
 ## Features
 
-- **Strongly-Typed Actors:** Ensuring that your actor interactions are type-safe and as per expectations.
-- **Nullable Support:** Full support for nullability in line with the latest C# features, ensuring your code is robust and safeguarded against null reference issues.
+- **Strongly-Typed Actors:** Ensuring that your actor interactions are type-safe and as per expectations. High use of [generics](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics) to avoid as much unnecessary boxing/unboxing as possible. 
+- **Nullable Support:** Full support for (nullability)[https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types] in line with the latest C# features, ensuring your code is robust and safeguarded against null reference issues.
 - **Lifecycle Management:** Nixie handles the meticulous management of actor lifecycle, allowing developers to focus on implementing logic.
 - **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nixie ensures that your actor systems are both scalable and performant.
 - **Less Error Prone:** The strongly-typed nature and nullability checks inherently make your actor system more reliable and resilient.
