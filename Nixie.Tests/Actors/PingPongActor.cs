@@ -3,7 +3,7 @@ namespace Nixie.Tests.Actors;
 
 public sealed class PongActor : IActor<string, string>
 {
-    public PongActor(IActorContext _)
+    public PongActor(IActorContext<PongActor, string, string> _)
     {
         
     }
@@ -20,7 +20,7 @@ public sealed class PingActor : IActor<string, string>
 
     private int receivedMessages;
 
-    public PingActor(IActorContext context)
+    public PingActor(IActorContext<PingActor, string, string> context)
     {
         pongRef = context.ActorSystem.Create<PongActor, string, string>();
     }

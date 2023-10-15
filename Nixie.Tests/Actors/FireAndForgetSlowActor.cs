@@ -5,7 +5,7 @@ public sealed class FireAndForgetSlowActor : IActor<string>
 {
     private readonly Dictionary<string, int> receivedMessages = new();
 
-    public FireAndForgetSlowActor(IActorContext context)
+    public FireAndForgetSlowActor(IActorContext<FireAndForgetSlowActor, string> context)
     {
 
     }    

@@ -1,4 +1,5 @@
 ﻿
+
 using System.Collections.Concurrent;
 
 namespace Nixie;
@@ -12,8 +13,8 @@ namespace Nixie;
 public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable where TActor : IActor<TRequest> where TRequest : class
 {
     private readonly ActorSystem actorSystem;
-    
-    private readonly ConcurrentDictionary<string, (ActorRunner<TActor, TRequest> , ActorRef<TActor, TRequest>)> actors = new();
+
+    private readonly ConcurrentDictionary<string, Lazy<(ActorRunner<TActor, TRequest>, ActorRef<TActor, TRequest>)>> actors = new();
 
     /// <summary>
     /// Constructor
@@ -30,9 +31,11 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
     /// <returns></returns>
     public bool HasPendingMessages()
     {
-        foreach (KeyValuePair<string, (ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)> actor in actors)
+        foreach (KeyValuePair<string, Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)>> actor in actors)
         {
-            if (!actor.Value.runner.Inbox.IsEmpty)
+            Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)> lazyValue = actor.Value;
+
+            if (lazyValue.IsValueCreated && !lazyValue.Value.runner.Inbox.IsEmpty)
                 return true;
         }
         return false;
@@ -44,9 +47,11 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
     /// <returns></returns>
     public bool IsProcessing()
     {
-        foreach (KeyValuePair<string, (ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)> actor in actors)
+        foreach (KeyValuePair<string, Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)>> actor in actors)
         {
-            if (actor.Value.runner.Processing)
+            Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)> lazyValue = actor.Value;
+
+            if (lazyValue.IsValueCreated && lazyValue.Value.runner.Processing)
                 return true;
         }
         return false;
@@ -57,7 +62,7 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    /// <exception cref="NixieException"></exception>
     public IActorRef<TActor, TRequest> Create(string? name = null)
     {
         if (!string.IsNullOrEmpty(name))
@@ -65,29 +70,39 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
             name = name.ToLowerInvariant();
 
             if (actors.ContainsKey(name))
-                throw new Exception("Actor already exists");
+                throw new NixieException("Actor already exists");
         }
         else
         {
             name = Guid.NewGuid().ToString();
         }
 
-        ActorContext actorContext = new(actorSystem);
+        Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)> actor = actors.GetOrAdd(
+            name,
+            (string name) => new Lazy<(ActorRunner<TActor, TRequest>, ActorRef<TActor, TRequest>)>(() => CreateInternal(name))
+        );
 
-        TActor? actor = (TActor?)Activator.CreateInstance(typeof(TActor), actorContext);
-        if (actor is null)
-            throw new Exception("Invalid actor");
+        return actor.Value.actorRef;
+    }
 
-        ActorRunner<TActor, TRequest> runner = new(name, actor);
+    private (ActorRunner<TActor, TRequest>, ActorRef<TActor, TRequest>) CreateInternal(string name)
+    {
+        ActorRunner<TActor, TRequest> runner = new(name);
 
         ActorRef<TActor, TRequest>? actorRef = (ActorRef<TActor, TRequest>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest>), runner);
 
         if (actorRef is null)
-            throw new Exception("Invalid props");
+            throw new NixieException("Invalid props");
 
-        actors.TryAdd(name, (runner, actorRef));        
+        ActorContext<TActor, TRequest> actorContext = new(actorSystem, actorRef);
 
-        return actorRef;
+        TActor? actor = (TActor?)Activator.CreateInstance(typeof(TActor), actorContext);
+        if (actor is null)
+            throw new NixieException("Invalid actor");
+
+        runner.Actor = actor;
+
+        return (runner, actorRef);
     }
 
     /// <summary>
@@ -97,8 +112,10 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
     /// <returns></returns>
     public IActorRef<TActor, TRequest>? Get(string name)
     {
-        if (actors.TryGetValue(name, out (ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef) actor))
-            return actor.actorRef;
+        name = name.ToLowerInvariant();
+
+        if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)>? actor))
+            return actor.Value.actorRef;
 
         return null;
     }

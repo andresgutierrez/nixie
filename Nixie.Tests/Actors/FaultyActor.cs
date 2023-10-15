@@ -7,7 +7,7 @@ public enum FaultyMessageType
     Faulty = 1
 }
 
-public class FaultyMessage
+public sealed class FaultyMessage
 {
     public FaultyMessageType Type { get; }
 
@@ -21,7 +21,7 @@ public sealed class FaultyActor : IActor<FaultyMessage>
 {
     private int receivedMessages;
 
-    public FaultyActor(IActorContext context)
+    public FaultyActor(IActorContext<FaultyActor, FaultyMessage> context)
     {
 
     }

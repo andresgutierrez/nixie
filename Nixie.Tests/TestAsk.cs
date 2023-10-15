@@ -8,7 +8,7 @@ public class TestAsk
     [Fact]
     public async Task TestAskMessageToSingleActor()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string> actor = asx.Create<ReplyActor, string, string>();
 
@@ -16,13 +16,13 @@ public class TestAsk
         Assert.NotNull(reply);
         Assert.Equal("TestSendMessageToSingleActor", reply);
 
-        Assert.Equal(1, ((ReplyActor)actor.Runner.Actor).GetMessages("TestSendMessageToSingleActor"));
+        Assert.Equal(1, ((ReplyActor)actor.Runner.Actor!).GetMessages("TestSendMessageToSingleActor"));
     }
 
     [Fact]
     public async Task TestCreateMultipleActorsAndAskOneMessage()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string>[] actorRefs = new IActorRef<ReplyActor, string, string>[10];
 
@@ -39,13 +39,13 @@ public class TestAsk
         await asx.Wait();
 
         for (int i = 0; i < 10; i++)
-            Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor).GetMessages("TestCreateMultipleActorsAndAskOneMessage"));
+            Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor!).GetMessages("TestCreateMultipleActorsAndAskOneMessage"));
     }
 
     [Fact]
     public async Task TestCreateMultipleActorsAndAskOneMessage2()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string>[] actorRefs = new IActorRef<ReplyActor, string, string>[100];
 
@@ -67,7 +67,7 @@ public class TestAsk
     [Fact]
     public async Task TestAskPingPong()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<PingActor, string, string> actor = asx.Create<PingActor, string, string>();
 
@@ -77,13 +77,13 @@ public class TestAsk
 
         await asx.Wait();
 
-        Assert.Equal(1, ((PingActor)actor.Runner.Actor).GetMessages());
+        Assert.Equal(1, ((PingActor)actor.Runner.Actor!).GetMessages());
     }
 
     [Fact]
     public async Task TestCreateMultiplePingPingAndAsk()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<PingActor, string, string>[] actorRefs = new IActorRef<PingActor, string, string>[100];
 
@@ -102,7 +102,7 @@ public class TestAsk
         await asx.Wait();
 
         for (int i = 0; i < 100; i++)
-            Assert.Equal(1, ((PingActor)actorRefs[i].Runner.Actor).GetMessages());
+            Assert.Equal(1, ((PingActor)actorRefs[i].Runner.Actor!).GetMessages());
     }
 
     private async Task AskPingPong(IActorRef<PingActor, string, string> pingRef, int i)
@@ -117,7 +117,7 @@ public class TestAsk
     [Fact]
     public async Task TestCreateMultiplePingPingAndAskRace()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<PingActor, string, string>[] actorRefs = new IActorRef<PingActor, string, string>[100];
 
@@ -134,7 +134,7 @@ public class TestAsk
         await asx.Wait();
 
         for (int i = 0; i < 100; i++)
-            Assert.Equal(1, ((PingActor)actorRefs[i].Runner.Actor).GetMessages());
+            Assert.Equal(1, ((PingActor)actorRefs[i].Runner.Actor!).GetMessages());
     }
 
     private async Task AskPingPongMultiple(IActorRef<PingActor, string, string> pingRef, int i)
@@ -152,7 +152,7 @@ public class TestAsk
     [Fact]
     public async Task TestCreateMultiplePingPingAndAskMultipleRace()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<PingActor, string, string>[] actorRefs = new IActorRef<PingActor, string, string>[100];
 
@@ -169,6 +169,6 @@ public class TestAsk
         await asx.Wait();
 
         for (int i = 0; i < 100; i++)
-            Assert.Equal(50, ((PingActor)actorRefs[i].Runner.Actor).GetMessages());
+            Assert.Equal(50, ((PingActor)actorRefs[i].Runner.Actor!).GetMessages());
     }
 }

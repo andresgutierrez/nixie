@@ -1,13 +1,13 @@
 ﻿
 namespace Nixie.Tests.Actors;
 
-public sealed class FireAndForgetActor : IActor<string>
+public sealed class PeriodicTimerActor : IActor<string>
 {
     private readonly Dictionary<string, int> receivedMessages = new();
 
-    public FireAndForgetActor(IActorContext<FireAndForgetActor, string> _)
+    public PeriodicTimerActor(IActorContext<PeriodicTimerActor, string> context)
     {
-
+        context.ActorSystem.StartPeriodicTimer(context.Self, "periodic-timer", "hello", TimeSpan.Zero, TimeSpan.FromSeconds(1));
     }
 
     public int GetMessages(string id)

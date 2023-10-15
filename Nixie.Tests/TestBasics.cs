@@ -8,7 +8,7 @@ public sealed class TestBasics
     [Fact]
     public void TestCreateFireAndForgetActor()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<FireAndForgetActor, string> actor = asx.Create<FireAndForgetActor, string>();
       
@@ -18,7 +18,7 @@ public sealed class TestBasics
     [Fact]
     public void TestCreateReplyActor()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string> actor = asx.Create<ReplyActor, string, string>();
 
@@ -28,7 +28,7 @@ public sealed class TestBasics
     [Fact]
     public void TestCreateFireAndForgetActorAndGet()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<FireAndForgetActor, string> actor = asx.Create<FireAndForgetActor, string>("my-actor");
 
@@ -43,7 +43,7 @@ public sealed class TestBasics
     [Fact]
     public void TestCreateFireAndForgetActorAndGet2()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<FireAndForgetActor, string>? notExistActor = asx.Get<FireAndForgetActor, string>("my-actor");
         Assert.Null(notExistActor);
@@ -61,7 +61,7 @@ public sealed class TestBasics
     [Fact]
     public void TestCreateReplyActorAndGet()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string> actor = asx.Create<ReplyActor, string, string>("my-actor");
 
@@ -76,7 +76,7 @@ public sealed class TestBasics
     [Fact]
     public void TestCreateReplyActorAndGet2()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string>? notExists = asx.Get<ReplyActor, string, string>("my-actor");
         Assert.Null(notExists);

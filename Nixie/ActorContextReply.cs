@@ -5,11 +5,11 @@ namespace Nixie;
 /// Represents an actor context. This class is passed to the actor when it is created.
 /// It can be used to create other actors or get the sender and the actor system.
 /// </summary>
-public sealed class ActorContext<TActor, TRequest> : IActorContext<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
+public sealed class ActorContext<TActor, TRequest, TResponse> : IActorContext<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {
     private readonly ActorSystem actorSystem;
 
-    private readonly IActorRef<TActor, TRequest> self;
+    private readonly IActorRef<TActor, TRequest, TResponse> self;
 
     /// <summary>
     /// Returns the actor system
@@ -19,13 +19,13 @@ public sealed class ActorContext<TActor, TRequest> : IActorContext<TActor, TRequ
     /// <summary>
     /// Returns the actor system
     /// </summary>
-    public IActorRef<TActor, TRequest> Self => self;
+    public IActorRef<TActor, TRequest, TResponse> Self => self;
 
     /// <summary>
     /// Creates a new actor context.
     /// </summary>
     /// <param name="actorSystem"></param>
-    public ActorContext(ActorSystem actorSystem, IActorRef<TActor, TRequest> self)
+    public ActorContext(ActorSystem actorSystem, IActorRef<TActor, TRequest, TResponse> self)
     {
         this.actorSystem = actorSystem;
         this.self = self;

@@ -6,7 +6,7 @@ namespace Nixie;
 /// <summary>
 /// The actor system encapsulates and encompasses all the actors and their references created. It is possible to have many independent actor systems running.
 /// </summary>
-public sealed class ActorSystem
+public sealed class ActorSystem : IDisposable
 {
     private readonly ActorScheduler scheduler = new();
 
@@ -84,7 +84,8 @@ public sealed class ActorSystem
     /// <typeparam name="TRequest"></typeparam>
     /// <typeparam name="TResponse"></typeparam>
     /// <returns></returns>
-    public ActorRepository<TActor, TRequest, TResponse> GetRepository<TActor, TRequest, TResponse>() where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    public ActorRepository<TActor, TRequest, TResponse> GetRepository<TActor, TRequest, TResponse>()
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
         if (!repositories.TryGetValue(typeof(TActor), out IActorRepositoryRunnable? unitOfWorker))
         {
@@ -102,7 +103,8 @@ public sealed class ActorSystem
     /// <typeparam name="TActor"></typeparam>
     /// <typeparam name="TRequest"></typeparam>
     /// <returns></returns>
-    public ActorRepository<TActor, TRequest> GetRepository<TActor, TRequest>() where TActor : IActor<TRequest> where TRequest : class
+    public ActorRepository<TActor, TRequest> GetRepository<TActor, TRequest>()
+        where TActor : IActor<TRequest> where TRequest : class
     {
         if (!repositories.TryGetValue(typeof(TActor), out IActorRepositoryRunnable? unitOfWorker))
         {
@@ -124,9 +126,35 @@ public sealed class ActorSystem
     /// <param name="request"></param>
     /// <param name="initialDelay"></param>
     /// <param name="interval"></param>
-    public void AddPeriodicTimer<TActor, TRequest>(string name, IActorRef<TActor, TRequest> actorRef, TRequest request, TimeSpan initialDelay, TimeSpan interval) where TActor : IActor<TRequest> where TRequest : class
+    public void StartPeriodicTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, string name, TRequest request, TimeSpan initialDelay, TimeSpan interval)
+        where TActor : IActor<TRequest> where TRequest : class
     {
-        scheduler.AddPeriodicTimer(name, actorRef, request, initialDelay, interval);
+        scheduler.StartPeriodicTimer(actorRef, name, request, initialDelay, interval);
+    }
+
+    /// <summary>
+    /// Creates a new periodic timer that will send a message to the specified actor every interval.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="initialDelay"></param>
+    /// <param name="interval"></param>
+    public void StartPeriodicTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, string name, TRequest request, TimeSpan initialDelay, TimeSpan interval)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        scheduler.StartPeriodicTimer(actorRef, name, request, initialDelay, interval);
+    }
+
+    /// <summary>
+    /// Stops an existing periodic timer
+    /// </summary>
+    /// <param name="name"></param>
+    public void StopPeriodicTimer(string name)
+    {
+        scheduler.StopPeriodicTimer(name);
     }
 
     /// <summary>
@@ -154,5 +182,10 @@ public sealed class ActorSystem
             if (completed)
                 break;
         }
+    }
+
+    public void Dispose()
+    {
+        scheduler.Dispose();
     }
 }

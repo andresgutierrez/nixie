@@ -26,7 +26,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// <summary>
     /// The reference to the actor.
     /// </summary>
-    public IActor<TRequest, TResponse> Actor { get; }
+    public IActor<TRequest, TResponse>? Actor { get; set; }
 
     /// <summary>
     /// True if the actor is processing a message.
@@ -38,10 +38,9 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// </summary>
     /// <param name="name"></param>
     /// <param name="actor"></param>
-    public ActorRunner(string name, IActor<TRequest, TResponse> actor)
+    public ActorRunner(string name)
     {
         Name = name;
-        Actor = actor;
     }
 
     /// <summary>
@@ -67,6 +66,9 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
 
     private async Task DeliverMessages()
     {
+        if (Actor is null)
+            return;
+
         do
         {
             while (Inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? messageReply))

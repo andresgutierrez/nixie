@@ -5,7 +5,7 @@ public sealed class ReplyActor : IActor<string, string>
 {
     private readonly Dictionary<string, int> receivedMessages = new();
 
-    public ReplyActor(IActorContext context)
+    public ReplyActor(IActorContext<ReplyActor, string, string> _)
     {
 
     }

@@ -16,7 +16,7 @@ public class TestSend
 
         await asx.Wait();
 
-        Assert.Equal(1, ((ReplyActor)actor.Runner.Actor).GetMessages("TestSendMessageToSingleActor"));
+        Assert.Equal(1, ((ReplyActor)actor.Runner.Actor!).GetMessages("TestSendMessageToSingleActor"));
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class TestSend
 
         await asx.Wait();
 
-        Assert.Equal(3, ((ReplyActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActor"));
+        Assert.Equal(3, ((ReplyActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleActor"));
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class TestSend
 
         await asx.Wait();
 
-        Assert.Equal(1, ((FireAndForgetActor)actor.Runner.Actor).GetMessages("TestSendMessageToSingleActorNoResponse"));
+        Assert.Equal(1, ((FireAndForgetActor)actor.Runner.Actor!).GetMessages("TestSendMessageToSingleActorNoResponse"));
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class TestSend
 
         await asx.Wait();
 
-        Assert.Equal(3, ((FireAndForgetActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
+        Assert.Equal(3, ((FireAndForgetActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public class TestSend
 
         await asx.Wait();
 
-        Assert.Equal(100, ((FireAndForgetActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
+        Assert.Equal(100, ((FireAndForgetActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class TestSend
 
         await asx.Wait();
 
-        Assert.Equal(3, ((FireAndForgetSlowActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
+        Assert.Equal(3, ((FireAndForgetSlowActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class TestSend
 
         await asx.Wait();
 
-        Assert.Equal(10, ((FireAndForgetSlowActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
+        Assert.Equal(10, ((FireAndForgetSlowActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class TestSend
         await asx.Wait();
 
         for (int i = 0; i < 10; i++)
-            Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor).GetMessages("TestCreateMultipleActorsAndSendOneMessage"));
+            Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor!).GetMessages("TestCreateMultipleActorsAndSendOneMessage"));
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class TestSend
         await asx.Wait();
 
         for (int i = 0; i < 100; i++)
-            Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor).GetMessages("TestCreateMultipleActorsAndSendOneMessage"));
+            Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor!).GetMessages("TestCreateMultipleActorsAndSendOneMessage"));
     }
 
     [Fact]
@@ -164,6 +164,6 @@ public class TestSend
 
         await asx.Wait();
 
-        Assert.Equal(3, ((FaultyActor)actor.Runner.Actor).GetMessages());
+        Assert.Equal(3, ((FaultyActor)actor.Runner.Actor!).GetMessages());
     }
 }
