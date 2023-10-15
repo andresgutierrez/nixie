@@ -3,7 +3,7 @@ namespace Nyx.Tests.Actors;
 
 public sealed class PongActor : IActor<string, string>
 {
-    public PongActor(IActorContext context)
+    public PongActor(IActorContext _)
     {
         
     }

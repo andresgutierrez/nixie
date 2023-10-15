@@ -36,7 +36,7 @@ public class TestAsk
             Assert.Equal("TestCreateMultipleActorsAndAskOneMessage", response);
         }
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         for (int i = 0; i < 10; i++)
             Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor).GetMessages("TestCreateMultipleActorsAndAskOneMessage"));
@@ -61,7 +61,7 @@ public class TestAsk
             Assert.Equal(expected, response);
         }
 
-        await Task.Delay(2000);
+        await asx.Wait();
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class TestAsk
         Assert.NotNull(reply);
         Assert.Equal("TestAskPingPong", reply);
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         Assert.Equal(1, ((PingActor)actor.Runner.Actor).GetMessages());
     }
@@ -99,7 +99,7 @@ public class TestAsk
             Assert.Equal(expected, response);
         }
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         for (int i = 0; i < 100; i++)
             Assert.Equal(1, ((PingActor)actorRefs[i].Runner.Actor).GetMessages());
@@ -131,7 +131,7 @@ public class TestAsk
 
         await Task.WhenAll(tasks);
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         for (int i = 0; i < 100; i++)
             Assert.Equal(1, ((PingActor)actorRefs[i].Runner.Actor).GetMessages());
@@ -166,7 +166,7 @@ public class TestAsk
 
         await Task.WhenAll(tasks);
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         for (int i = 0; i < 100; i++)
             Assert.Equal(50, ((PingActor)actorRefs[i].Runner.Actor).GetMessages());

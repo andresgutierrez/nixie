@@ -14,7 +14,7 @@ public class TestSend
 
         actor.Send("TestSendMessageToSingleActor");
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         Assert.Equal(1, ((ReplyActor)actor.Runner.Actor).GetMessages("TestSendMessageToSingleActor"));
     }
@@ -30,7 +30,7 @@ public class TestSend
         actor.Send("TestSendMultipleMessageToSingleActor");
         actor.Send("TestSendMultipleMessageToSingleActor");
 
-        await Task.Delay(5000);
+        await asx.Wait();
 
         Assert.Equal(3, ((ReplyActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActor"));
     }
@@ -44,7 +44,7 @@ public class TestSend
 
         actor.Send("TestSendMessageToSingleActorNoResponse");
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         Assert.Equal(1, ((FireAndForgetActor)actor.Runner.Actor).GetMessages("TestSendMessageToSingleActorNoResponse"));
     }
@@ -60,9 +60,7 @@ public class TestSend
         actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
         actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
 
-        //await asx.Wait();
-
-        await Task.Delay(2000);
+        await asx.Wait();
 
         Assert.Equal(3, ((FireAndForgetActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
     }
@@ -77,7 +75,7 @@ public class TestSend
         for (int i = 0; i < 100; i++)
             actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         Assert.Equal(100, ((FireAndForgetActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
     }
@@ -93,9 +91,7 @@ public class TestSend
         actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
         actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
 
-        //await asx.Wait();
-
-        await Task.Delay(5000);
+        await asx.Wait();
 
         Assert.Equal(3, ((FireAndForgetSlowActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
     }
@@ -110,9 +106,7 @@ public class TestSend
         for (int i = 0; i < 10; i++)
             actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
 
-        //await asx.Wait();
-
-        await Task.Delay(12000);
+        await asx.Wait();
 
         Assert.Equal(10, ((FireAndForgetSlowActor)actor.Runner.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
     }
@@ -130,7 +124,7 @@ public class TestSend
         for (int i = 0; i < 10; i++)
             actorRefs[i].Send("TestCreateMultipleActorsAndSendOneMessage");
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         for (int i = 0; i < 10; i++)
             Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor).GetMessages("TestCreateMultipleActorsAndSendOneMessage"));
@@ -149,7 +143,7 @@ public class TestSend
         for (int i = 0; i < 100; i++)
             actorRefs[i].Send("TestCreateMultipleActorsAndSendOneMessage");
 
-        await Task.Delay(2000);
+        await asx.Wait();
 
         for (int i = 0; i < 100; i++)
             Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor).GetMessages("TestCreateMultipleActorsAndSendOneMessage"));
