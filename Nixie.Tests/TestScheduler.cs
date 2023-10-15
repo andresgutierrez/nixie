@@ -60,4 +60,20 @@ public sealed class TestScheduler
 
         Assert.Equal("There is no timer with this name.", exception.Message);
     }
+
+    [Fact]
+    public async void TestCreateOnceTimer()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<OnceTimerActor, OnceTimerMessage> actor = asx.Spawn<OnceTimerActor, OnceTimerMessage>();
+
+        Assert.IsAssignableFrom<OnceTimerActor>(actor.Runner.Actor);
+
+        await Task.Delay(2000);
+
+        int numberMessages = ((OnceTimerActor)actor.Runner.Actor!).GetMessages();
+
+        Assert.Equal(1, numberMessages);
+    }
 }

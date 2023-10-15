@@ -60,9 +60,10 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     /// Creates a new actor and returns a reference to it
     /// </summary>
     /// <param name="name"></param>
+    /// <param name="args"></param>
     /// <returns></returns>
     /// <exception cref="NixieException"></exception>
-    public IActorRef<TActor, TRequest, TResponse> Spawn(string? name = null)
+    public IActorRef<TActor, TRequest, TResponse> Spawn(string? name = null, params object[]? args)
     {
         if (!string.IsNullOrEmpty(name))
         {
@@ -78,13 +79,13 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
 
         Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)> actor = actors.GetOrAdd(
             name,
-            (string name) => new Lazy<(ActorRunner<TActor, TRequest, TResponse>, ActorRef<TActor, TRequest, TResponse>)>(() => CreateInternal(name))
+            (string name) => new Lazy<(ActorRunner<TActor, TRequest, TResponse>, ActorRef<TActor, TRequest, TResponse>)>(() => CreateInternal(name, args))
         );
 
         return actor.Value.actorRef;
     }
 
-    private (ActorRunner<TActor, TRequest, TResponse>, ActorRef<TActor, TRequest, TResponse>) CreateInternal(string name)
+    private (ActorRunner<TActor, TRequest, TResponse>, ActorRef<TActor, TRequest, TResponse>) CreateInternal(string name, params object[]? args)
     {
         ActorRunner<TActor, TRequest, TResponse> runner = new(name);
 
@@ -95,7 +96,13 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
 
         ActorContext<TActor, TRequest, TResponse> actorContext = new(actorSystem, actorRef);
 
-        TActor? actor = (TActor?)Activator.CreateInstance(typeof(TActor), actorContext);
+        TActor? actor;
+
+        if (args is not null && args.Length > 0)
+            actor = (TActor?)Activator.CreateInstance(typeof(TActor), actorContext, args);
+        else
+            actor = (TActor?)Activator.CreateInstance(typeof(TActor), actorContext);
+
         if (actor is null)
             throw new NixieException("Invalid actor");
 

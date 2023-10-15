@@ -24,12 +24,13 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TRequest"></typeparam>
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
+    /// <param name="args"></param>
     /// <returns></returns>
-    public IActorRef<TActor, TRequest, TResponse> Spawn<TActor, TRequest, TResponse>(string? name = null) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    public IActorRef<TActor, TRequest, TResponse> Spawn<TActor, TRequest, TResponse>(string? name = null, params object[]? args) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
         ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
 
-        return repository.Spawn(name);
+        return repository.Spawn(name, args);
     }
 
     /// <summary>
@@ -52,14 +53,14 @@ public sealed class ActorSystem : IDisposable
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
     /// <typeparam name="TRequest"></typeparam>
-    /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
+    /// <param name="args"></param>
     /// <returns></returns>
-    public IActorRef<TActor, TRequest> Spawn<TActor, TRequest>(string? name = null) where TActor : IActor<TRequest> where TRequest : class
+    public IActorRef<TActor, TRequest> Spawn<TActor, TRequest>(string? name = null, params object[]? args) where TActor : IActor<TRequest> where TRequest : class
     {
         ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
 
-        return repository.Spawn(name);
+        return repository.Spawn(name, args);
     }
 
     /// <summary>
