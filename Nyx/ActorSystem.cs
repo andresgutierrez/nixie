@@ -53,6 +53,8 @@ public sealed class ActorSystem
 
             foreach (KeyValuePair<Type, IActorRepositoryRunnable> x in repositories)
             {
+                //Console.WriteLine("{0} HP={1} IsP={2}", x.Key, x.Value.HasPendingMessages(), x.Value.IsProcessing());
+
                 if (x.Value.HasPendingMessages() || x.Value.IsProcessing())
                 {
                     await Task.Yield();

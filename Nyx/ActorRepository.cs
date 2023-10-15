@@ -52,7 +52,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         if (actor is null)
             throw new Exception("Invalid actor");
 
-        ActorContext<TActor, TRequest, TResponse> context = new(actor);
+        ActorContext<TActor, TRequest, TResponse> context = new(name, actor);
 
         ActorRef<TActor, TRequest, TResponse>? actorRef = (ActorRef<TActor, TRequest, TResponse>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest, TResponse>), context);
 

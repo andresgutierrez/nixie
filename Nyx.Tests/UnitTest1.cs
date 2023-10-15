@@ -1,59 +1,91 @@
 
 namespace Nyx.Tests;
 
-public sealed class MyActor : IActor<string, string>
+public sealed class ReplyActor : IActor<string, string>
 {
-    private static int numberMessages;
+    private readonly Dictionary<string, int> receivedMessages = new();
 
-    public static int GetMessages => numberMessages;
+    public int GetMessages(string id)
+    {
+        if (receivedMessages.TryGetValue(id, out int number))
+            return number;
+
+        return 0;
+    }
+
+    public void IncrMessage(string id)
+    {
+        if (!receivedMessages.ContainsKey(id))
+            receivedMessages.Add(id, 1);
+        else
+            receivedMessages[id]++;
+    }
 
     public Task<string> Receive(string message)
     {
-        numberMessages++;
+        IncrMessage(message);
 
         return Task.FromResult(message);
     }
 }
 
-public sealed class MyActor2 : IActor<string, string>
+public sealed class FireAndForgetActor : IActor<string>
 {
-    private static int numberMessages;
+    private readonly Dictionary<string, int> receivedMessages = new();
 
-    public static int GetMessages => numberMessages;
-
-    public Task<string> Receive(string message)
+    public int GetMessages(string id)
     {
-        numberMessages++;
+        if (receivedMessages.TryGetValue(id, out int number))
+            return number;
 
-        return Task.FromResult(message);
+        return 0;
     }
-}
 
-public sealed class MyActor3 : IActor<string>
-{
-    private static int numberMessages;
-
-    public static int GetMessages => numberMessages;
-
-    public async Task Receive(string message)
-    {        
-        await Task.Yield();
-
-        numberMessages++;        
+    public void IncrMessage(string id)
+    {
+        if (!receivedMessages.ContainsKey(id))
+            receivedMessages.Add(id, 1);
+        else
+            receivedMessages[id]++;
     }
-}
-
-public sealed class MyActor4 : IActor<string>
-{
-    private static int numberMessages;
-
-    public static int GetMessages => numberMessages;
 
     public async Task Receive(string message)
     {
         await Task.Yield();
 
-        numberMessages++;
+        Console.WriteLine("hello");
+
+        IncrMessage(message);
+    }
+}
+
+public sealed class FireAndForgetSlowActor : IActor<string>
+{
+    private readonly Dictionary<string, int> receivedMessages = new();
+
+    public int GetMessages(string id)
+    {
+        if (receivedMessages.TryGetValue(id, out int number))
+            return number;
+
+        return 0;
+    }
+
+    public void IncrMessage(string id)
+    {
+        if (!receivedMessages.ContainsKey(id))
+            receivedMessages.Add(id, 1);
+        else
+            receivedMessages[id]++;
+    }
+
+    public async Task Receive(string message)
+    {
+        await Task.Delay(1000);
+
+        IncrMessage(message);
+
+        Console.WriteLine(GetMessages(message));
     }
 }
 
@@ -64,13 +96,13 @@ public sealed class UnitTest1
     {
         ActorSystem asx = new();
 
-        IActorRef<MyActor, string, string> actor = asx.Create<MyActor, string, string>();
+        IActorRef<ReplyActor, string, string> actor = asx.Create<ReplyActor, string, string>();
 
-        actor.Send("hello 1");
+        actor.Send("TestSendMessageToSingleActor");
 
         await asx.Wait();
-
-        Assert.Equal(1, MyActor.GetMessages);
+        
+        Assert.Equal(1, ((ReplyActor)actor.Context.Actor).GetMessages("TestSendMessageToSingleActor"));
     }
 
     [Fact]
@@ -78,17 +110,15 @@ public sealed class UnitTest1
     {
         ActorSystem asx = new();
 
-        IActorRef<MyActor2, string, string> actor = asx.Create<MyActor2, string, string>();
+        IActorRef<ReplyActor, string, string> actor = asx.Create<ReplyActor, string, string>();
 
-        //as.
-
-        actor.Send("hello 1");
-        actor.Send("hello 2");
-        actor.Send("hello 3");
+        actor.Send("TestSendMultipleMessageToSingleActor");
+        actor.Send("TestSendMultipleMessageToSingleActor");
+        actor.Send("TestSendMultipleMessageToSingleActor");
 
         await asx.Wait();
-
-        Assert.Equal(3, MyActor2.GetMessages);
+        
+        Assert.Equal(3, ((ReplyActor)actor.Context.Actor).GetMessages("TestSendMultipleMessageToSingleActor"));
     }
 
     [Fact]
@@ -96,13 +126,13 @@ public sealed class UnitTest1
     {
         ActorSystem asx = new();
 
-        IActorRef<MyActor3, string> actor = asx.Create<MyActor3, string>();
+        IActorRef<FireAndForgetActor, string> actor = asx.Create<FireAndForgetActor, string>();
 
-        actor.Send("hello 1");
+        actor.Send("TestSendMessageToSingleActorNoResponse");
 
         await asx.Wait();
 
-        Assert.Equal(1, MyActor3.GetMessages);
+        Assert.Equal(1, ((FireAndForgetActor)actor.Context.Actor).GetMessages("TestSendMessageToSingleActorNoResponse"));
     }
 
     [Fact]
@@ -110,16 +140,30 @@ public sealed class UnitTest1
     {
         ActorSystem asx = new();
 
-        IActorRef<MyActor4, string> actor = asx.Create<MyActor4, string>();
+        IActorRef<FireAndForgetActor, string> actor = asx.Create<FireAndForgetActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
 
-        //as.
-
-        actor.Send("hello 1");
-        actor.Send("hello 2");
-        actor.Send("hello 3");
+        actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
+        actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
+        actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
 
         await asx.Wait();
 
-        Assert.Equal(3, MyActor4.GetMessages);
+        Assert.Equal(3, ((FireAndForgetActor)actor.Context.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
+    }
+
+    [Fact]
+    public async Task TestSendMultipleMessageToSingleActorNoResponseSlow()
+    {
+        ActorSystem asx = new();
+
+        IActorRef<FireAndForgetSlowActor, string> actor = asx.Create<FireAndForgetSlowActor, string>("TestSendMultipleMessageToSingleActorNoResponseSlow");
+
+        actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
+        actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
+        actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
+
+        await asx.Wait();
+
+        Assert.Equal(3, ((FireAndForgetSlowActor)actor.Context.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
     }
 }
