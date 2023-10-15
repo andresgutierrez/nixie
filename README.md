@@ -9,7 +9,7 @@ Nixie is a lightweight, high-performance implementation of the [actor model](htt
 ## Features
 
 - **Strongly-Typed Actors:** Ensuring that your actor interactions are type-safe and as per expectations. High use of [generics](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics) to avoid as much unnecessary boxing/unboxing as possible. 
-- **Nullable Support:** Full support for (nullability)[https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types] in line with the latest C# features, ensuring your code is robust and safeguarded against null reference issues.
+- **Nullable Support:** Full support for [nullability](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types) in line with the latest C# features, ensuring your code is robust and safeguarded against null reference issues.
 - **Lifecycle Management:** Nixie handles the meticulous management of actor lifecycle, allowing developers to focus on implementing logic.
 - **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nixie ensures that your actor systems are both scalable and performant.
 - **Less Error Prone:** The strongly-typed nature and nullability checks inherently make your actor system more reliable and resilient.
