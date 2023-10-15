@@ -148,4 +148,22 @@ public class TestSend
         for (int i = 0; i < 100; i++)
             Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor).GetMessages("TestCreateMultipleActorsAndSendOneMessage"));
     }
+
+    [Fact]
+    public async Task TestSendMessageToFaultyActor()
+    {
+        ActorSystem asx = new();
+
+        IActorRef<FaultyActor, FaultyMessage> actor = asx.Create<FaultyActor, FaultyMessage>();
+
+        actor.Send(new FaultyMessage(FaultyMessageType.Ok));
+        actor.Send(new FaultyMessage(FaultyMessageType.Faulty));
+        actor.Send(new FaultyMessage(FaultyMessageType.Ok));
+        actor.Send(new FaultyMessage(FaultyMessageType.Ok));
+        actor.Send(new FaultyMessage(FaultyMessageType.Faulty));
+
+        await asx.Wait();
+
+        Assert.Equal(3, ((FaultyActor)actor.Runner.Actor).GetMessages());
+    }
 }

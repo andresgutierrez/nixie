@@ -1,6 +1,12 @@
 ﻿
 namespace Nyx;
 
+/// <summary>
+/// Represents an actor reference.
+/// </summary>
+/// <typeparam name="TActor"></typeparam>
+/// <typeparam name="TRequest"></typeparam>
+/// <typeparam name="TResponse"></typeparam>
 public sealed class ActorRef<TActor, TRequest, TResponse> : IActorRef<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {
     private readonly ActorRunner<TActor, TRequest, TResponse> runner;
