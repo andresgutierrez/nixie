@@ -1,5 +1,4 @@
 ﻿
-
 using System.Collections.Concurrent;
 
 namespace Nixie;
@@ -63,7 +62,7 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
     /// <param name="name"></param>
     /// <returns></returns>
     /// <exception cref="NixieException"></exception>
-    public IActorRef<TActor, TRequest> Create(string? name = null)
+    public IActorRef<TActor, TRequest> Spawn(string? name = null)
     {
         if (!string.IsNullOrEmpty(name))
         {

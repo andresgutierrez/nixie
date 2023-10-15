@@ -22,7 +22,7 @@ public sealed class PingActor : IActor<string, string>
 
     public PingActor(IActorContext<PingActor, string, string> context)
     {
-        pongRef = context.ActorSystem.Create<PongActor, string, string>();
+        pongRef = context.ActorSystem.Spawn<PongActor, string, string>();
     }
 
     public int GetMessages()

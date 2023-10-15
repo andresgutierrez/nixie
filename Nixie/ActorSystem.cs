@@ -25,11 +25,11 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
-    public IActorRef<TActor, TRequest, TResponse> Create<TActor, TRequest, TResponse>(string? name = null) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    public IActorRef<TActor, TRequest, TResponse> Spawn<TActor, TRequest, TResponse>(string? name = null) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
         ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
 
-        return repository.Create(name);
+        return repository.Spawn(name);
     }
 
     /// <summary>
@@ -55,11 +55,11 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
-    public IActorRef<TActor, TRequest> Create<TActor, TRequest>(string? name = null) where TActor : IActor<TRequest> where TRequest : class
+    public IActorRef<TActor, TRequest> Spawn<TActor, TRequest>(string? name = null) where TActor : IActor<TRequest> where TRequest : class
     {
         ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
 
-        return repository.Create(name);
+        return repository.Spawn(name);
     }
 
     /// <summary>
@@ -137,6 +137,7 @@ public sealed class ActorSystem : IDisposable
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
     /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <param name="actorRef"></param>
     /// <param name="request"></param>
@@ -149,12 +150,56 @@ public sealed class ActorSystem : IDisposable
     }
 
     /// <summary>
-    /// Stops an existing periodic timer
+    /// Schedules a message to be sent to an actor once after a specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public void ScheduleOnce<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        scheduler.ScheduleOnce(actorRef, request, delay);
+    }
+
+    /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public void ScheduleOnce<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        scheduler.ScheduleOnce(actorRef, request, delay);
+    }
+
+    /// <summary>
+    /// Stops a periodic timer
     /// </summary>
     /// <param name="name"></param>
-    public void StopPeriodicTimer(string name)
+    /// <exception cref="NixieException"></exception>
+    public void StopPeriodicTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, string name)
+        where TActor : IActor<TRequest> where TRequest : class
     {
-        scheduler.StopPeriodicTimer(name);
+        scheduler.StopPeriodicTimer(actorRef, name);
+    }
+
+    /// <summary>
+    /// Stops a periodic timer
+    /// </summary>
+    /// <param name="name"></param>
+    /// <exception cref="NixieException"></exception>
+    public void StopPeriodicTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, string name)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        scheduler.StopPeriodicTimer(actorRef, name);
     }
 
     /// <summary>

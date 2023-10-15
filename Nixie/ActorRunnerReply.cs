@@ -84,6 +84,6 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
                     Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
                 }
             }
-        } while (Interlocked.CompareExchange(ref processing, 1, 0) != 0);        
+        } while (Interlocked.CompareExchange(ref processing, 1, 0) != 0);
     }
 }

@@ -10,7 +10,7 @@ public class LazyTaskMethodBuilder<T>
     //public static LazyTaskMethodBuilder<T> Create() => new();
 
     public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
-    {        
+    {
         Task.SetStateMachine(stateMachine);
     }
 

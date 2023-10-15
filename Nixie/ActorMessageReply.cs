@@ -21,16 +21,16 @@ public sealed record ActorMessageReply<TRequest, TResponse>
     /// <summary>
     /// Returns true if the response has been set.
     /// </summary>
-    public bool IsCompleted { get; private set; }    
+    public bool IsCompleted { get; private set; }
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="request"></param>
     public ActorMessageReply(TRequest request)
-	{
-        Request = request;        
-	}
+    {
+        Request = request;
+    }
 
     /// <summary>
     /// Marks the reply as completed.

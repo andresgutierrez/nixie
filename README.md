@@ -60,7 +60,7 @@ public class GreetMessage
 
 public class GreeterActor : IActor<GreetMessage>
 {    
-    public FireAndForgetActor(IActorContext _)
+    public GreeterActor(IActorContext<GreeterActor, GreetMessage> _)
     {
 
     }
@@ -73,7 +73,7 @@ public class GreeterActor : IActor<GreetMessage>
 
 var system = new ActorSystem();
 
-var greeter = system.Create<GreeterActor, GreetMessage>();
+var greeter = system.Spawn<GreeterActor, GreetMessage>();
 
 greeter.Send(new GreetMessage("Hello, Nixie!"));
 ```

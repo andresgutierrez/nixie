@@ -10,7 +10,7 @@ public class TestAsk
     {
         using ActorSystem asx = new();
 
-        IActorRef<ReplyActor, string, string> actor = asx.Create<ReplyActor, string, string>();
+        IActorRef<ReplyActor, string, string> actor = asx.Spawn<ReplyActor, string, string>();
 
         string? reply = await actor.Ask("TestSendMessageToSingleActor");
         Assert.NotNull(reply);
@@ -27,7 +27,7 @@ public class TestAsk
         IActorRef<ReplyActor, string, string>[] actorRefs = new IActorRef<ReplyActor, string, string>[10];
 
         for (int i = 0; i < 10; i++)
-            actorRefs[i] = asx.Create<ReplyActor, string, string>();
+            actorRefs[i] = asx.Spawn<ReplyActor, string, string>();
 
         for (int i = 0; i < 10; i++)
         {
@@ -50,7 +50,7 @@ public class TestAsk
         IActorRef<ReplyActor, string, string>[] actorRefs = new IActorRef<ReplyActor, string, string>[100];
 
         for (int i = 0; i < 100; i++)
-            actorRefs[i] = asx.Create<ReplyActor, string, string>();
+            actorRefs[i] = asx.Spawn<ReplyActor, string, string>();
 
         for (int i = 0; i < 100; i++)
         {
@@ -69,7 +69,7 @@ public class TestAsk
     {
         using ActorSystem asx = new();
 
-        IActorRef<PingActor, string, string> actor = asx.Create<PingActor, string, string>();
+        IActorRef<PingActor, string, string> actor = asx.Spawn<PingActor, string, string>();
 
         string? reply = await actor.Ask("TestAskPingPong");
         Assert.NotNull(reply);
@@ -88,7 +88,7 @@ public class TestAsk
         IActorRef<PingActor, string, string>[] actorRefs = new IActorRef<PingActor, string, string>[100];
 
         for (int i = 0; i < 100; i++)
-            actorRefs[i] = asx.Create<PingActor, string, string>();
+            actorRefs[i] = asx.Spawn<PingActor, string, string>();
 
         for (int i = 0; i < 100; i++)
         {
@@ -122,7 +122,7 @@ public class TestAsk
         IActorRef<PingActor, string, string>[] actorRefs = new IActorRef<PingActor, string, string>[100];
 
         for (int i = 0; i < 100; i++)
-            actorRefs[i] = asx.Create<PingActor, string, string>();
+            actorRefs[i] = asx.Spawn<PingActor, string, string>();
 
         Task[] tasks = new Task[100];
 
@@ -157,7 +157,7 @@ public class TestAsk
         IActorRef<PingActor, string, string>[] actorRefs = new IActorRef<PingActor, string, string>[100];
 
         for (int i = 0; i < 100; i++)
-            actorRefs[i] = asx.Create<PingActor, string, string>();
+            actorRefs[i] = asx.Spawn<PingActor, string, string>();
 
         Task[] tasks = new Task[100];
 

@@ -8,10 +8,12 @@ namespace Nixie;
 /// </summary>
 public class ActorScheduler : IDisposable
 {
-    private readonly ConcurrentDictionary<string, Lazy<Timer>> timers = new();    
+    private readonly ConcurrentDictionary<object, Lazy<ConcurrentDictionary<string, Lazy<Timer>>>> periodicTimers = new();
+
+    private readonly ConcurrentDictionary<object, Lazy<ConcurrentBag<Timer>>> onceTimers = new();
 
     /// <summary>
-    /// Starts a periodic timer
+    /// Schedules a message to be sent to an actor once after a specified delay at a specified interval.
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
     /// <typeparam name="TRequest"></typeparam>
@@ -23,21 +25,71 @@ public class ActorScheduler : IDisposable
     public Timer StartPeriodicTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, string name, TRequest request, TimeSpan initialDelay, TimeSpan interval)
         where TActor : IActor<TRequest> where TRequest : class
     {
-        if (timers.ContainsKey(name))
+        if (periodicTimers.ContainsKey(name))
             throw new NixieException("There is already an active timer with this name.");
 
-        Lazy<Timer> timer = timers.GetOrAdd(name, (string name) => new Lazy<Timer>(() => AddPeriodicTimerInternal(actorRef, request, initialDelay, interval)));
+        Lazy<ConcurrentDictionary<string, Lazy<Timer>>> timers = periodicTimers.GetOrAdd(actorRef, (actorRef) => new Lazy<ConcurrentDictionary<string, Lazy<Timer>>>());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(name, (string name) => new Lazy<Timer>(() => AddPeriodicTimerInternal(actorRef, request, initialDelay, interval)));
         return timer.Value;
     }
 
+    /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay at a specified interval.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="name"></param>
+    /// <param name="request"></param>
+    /// <param name="initialDelay"></param>
+    /// <param name="interval"></param>
+    /// <returns></returns>
+    /// <exception cref="NixieException"></exception>
     public Timer StartPeriodicTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, string name, TRequest request, TimeSpan initialDelay, TimeSpan interval)
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
-        if (timers.ContainsKey(name))
+        if (periodicTimers.ContainsKey(name))
             throw new NixieException("There is already an active timer with this name.");
 
-        Lazy<Timer> timer = timers.GetOrAdd(name, (string name) => new Lazy<Timer>(() => AddPeriodicTimerInternal(actorRef, request, initialDelay, interval)));
+        Lazy<ConcurrentDictionary<string, Lazy<Timer>>> timers = periodicTimers.GetOrAdd(actorRef, (actorRef) => new Lazy<ConcurrentDictionary<string, Lazy<Timer>>>());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(name, (string name) => new Lazy<Timer>(() => AddPeriodicTimerInternal(actorRef, request, initialDelay, interval)));
         return timer.Value;
+    }
+
+    /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public ConcurrentBag<Timer> ScheduleOnce<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        Lazy<ConcurrentBag<Timer>> timers = onceTimers.GetOrAdd(actorRef, (object actorRef) => new Lazy<ConcurrentBag<Timer>>());
+        timers.Value.Add(ScheduleOnceTimer(actorRef, request, delay));
+        return timers.Value;
+    }
+
+    /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public ConcurrentBag<Timer> ScheduleOnce<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        Lazy<ConcurrentBag<Timer>> timers = onceTimers.GetOrAdd(actorRef, (object actorRef) => new Lazy<ConcurrentBag<Timer>>());
+        timers.Value.Add(ScheduleOnceTimer(actorRef, request, delay));
+        return timers.Value;
     }
 
     /// <summary>
@@ -45,37 +97,72 @@ public class ActorScheduler : IDisposable
     /// </summary>
     /// <param name="name"></param>
     /// <exception cref="NixieException"></exception>
-    public void StopPeriodicTimer(string name)
+    public void StopPeriodicTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, string name)
+        where TActor : IActor<TRequest> where TRequest : class
     {
-        if (!timers.ContainsKey(name))
-            throw new NixieException("There is no timer with this name.");
-
-        if (timers.TryRemove(name, out Lazy<Timer>? timer))
+        if (periodicTimers.TryGetValue(actorRef, out Lazy<ConcurrentDictionary<string, Lazy<Timer>>>? timers))
         {
+            if (!timers.Value.TryGetValue(name, out Lazy<Timer>? timer))
+                throw new NixieException("There is no timer with this name.");
+
             if (timer.IsValueCreated)
                 timer.Value.Dispose();
+
+            timers.Value.TryRemove(name, out _);
+        }
+    }
+
+    /// <summary>
+    /// Stops a periodic timer
+    /// </summary>
+    /// <param name="name"></param>
+    /// <exception cref="NixieException"></exception>
+    public void StopPeriodicTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, string name)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        if (periodicTimers.TryGetValue(actorRef, out Lazy<ConcurrentDictionary<string, Lazy<Timer>>>? timers))
+        {
+            if (!timers.Value.TryGetValue(name, out Lazy<Timer>? timer))
+                throw new NixieException("There is no timer with this name.");
+
+            if (timer.IsValueCreated)
+                timer.Value.Dispose();
+
+            timers.Value.TryRemove(name, out _);
         }
     }
 
     private Timer AddPeriodicTimerInternal<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request, TimeSpan initialDelay, TimeSpan interval)
         where TActor : IActor<TRequest> where TRequest : class
     {
-        return new((x) => SendPeriodicTimer(actorRef, request), null, initialDelay, interval);        
-    }
-    
-    private void SendPeriodicTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request)
-        where TActor : IActor<TRequest> where TRequest : class
-    {
-        actorRef.Send(request);
+        return new((state) => SendScheduledMessage(actorRef, request), null, initialDelay, interval);
     }
 
     private Timer AddPeriodicTimerInternal<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan initialDelay, TimeSpan interval)
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
-        return new((x) => SendPeriodicTimer(actorRef, request), null, initialDelay, interval);
+        return new((state) => SendScheduledMessage(actorRef, request), null, initialDelay, interval);
     }
 
-    private void SendPeriodicTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request)
+    private Timer ScheduleOnceTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        return new((state) => SendScheduledMessage(actorRef, request), null, delay, TimeSpan.Zero);
+    }
+
+    private Timer ScheduleOnceTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        return new((state) => SendScheduledMessage(actorRef, request), null, delay, TimeSpan.Zero);
+    }
+
+    private void SendScheduledMessage<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        actorRef.Send(request);
+    }
+
+    private void SendScheduledMessage<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request)
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
         actorRef.Send(request);
@@ -83,10 +170,22 @@ public class ActorScheduler : IDisposable
 
     public void Dispose()
     {
-        foreach (KeyValuePair<string, Lazy<Timer>> timer in timers)
+        foreach (KeyValuePair<object, Lazy<ConcurrentDictionary<string, Lazy<Timer>>>> periodicTimer in periodicTimers)
         {
-            if (timer.Value.IsValueCreated)
-                timer.Value.Value.Dispose();
+            foreach (KeyValuePair<string, Lazy<Timer>> timer in periodicTimer.Value.Value)
+            {
+                if (timer.Value.IsValueCreated)
+                    timer.Value.Value.Dispose();
+            }
+        }
+
+        foreach (KeyValuePair<object, Lazy<ConcurrentBag<Timer>>> onceTimer in onceTimers)
+        {
+            if (!onceTimer.Value.IsValueCreated)
+                continue;
+
+            foreach (Timer timer in onceTimer.Value.Value)
+                timer?.Dispose();
         }
     }
 }

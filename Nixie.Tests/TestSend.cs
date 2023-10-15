@@ -10,7 +10,7 @@ public class TestSend
     {
         ActorSystem asx = new();
 
-        IActorRef<ReplyActor, string, string> actor = asx.Create<ReplyActor, string, string>();
+        IActorRef<ReplyActor, string, string> actor = asx.Spawn<ReplyActor, string, string>();
 
         actor.Send("TestSendMessageToSingleActor");
 
@@ -24,7 +24,7 @@ public class TestSend
     {
         ActorSystem asx = new();
 
-        IActorRef<ReplyActor, string, string> actor = asx.Create<ReplyActor, string, string>();
+        IActorRef<ReplyActor, string, string> actor = asx.Spawn<ReplyActor, string, string>();
 
         actor.Send("TestSendMultipleMessageToSingleActor");
         actor.Send("TestSendMultipleMessageToSingleActor");
@@ -40,7 +40,7 @@ public class TestSend
     {
         ActorSystem asx = new();
 
-        IActorRef<FireAndForgetActor, string> actor = asx.Create<FireAndForgetActor, string>();
+        IActorRef<FireAndForgetActor, string> actor = asx.Spawn<FireAndForgetActor, string>();
 
         actor.Send("TestSendMessageToSingleActorNoResponse");
 
@@ -54,7 +54,7 @@ public class TestSend
     {
         ActorSystem asx = new();
 
-        IActorRef<FireAndForgetActor, string> actor = asx.Create<FireAndForgetActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
+        IActorRef<FireAndForgetActor, string> actor = asx.Spawn<FireAndForgetActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
 
         actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
         actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
@@ -70,7 +70,7 @@ public class TestSend
     {
         ActorSystem asx = new();
 
-        IActorRef<FireAndForgetActor, string> actor = asx.Create<FireAndForgetActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
+        IActorRef<FireAndForgetActor, string> actor = asx.Spawn<FireAndForgetActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
 
         for (int i = 0; i < 100; i++)
             actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
@@ -85,7 +85,7 @@ public class TestSend
     {
         ActorSystem asx = new();
 
-        IActorRef<FireAndForgetSlowActor, string> actor = asx.Create<FireAndForgetSlowActor, string>("TestSendMultipleMessageToSingleActorNoResponseSlow");
+        IActorRef<FireAndForgetSlowActor, string> actor = asx.Spawn<FireAndForgetSlowActor, string>("TestSendMultipleMessageToSingleActorNoResponseSlow");
 
         actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
         actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
@@ -101,7 +101,7 @@ public class TestSend
     {
         ActorSystem asx = new();
 
-        IActorRef<FireAndForgetSlowActor, string> actor = asx.Create<FireAndForgetSlowActor, string>("TestSendMultipleMessageToSingleActorNoResponseSlow");
+        IActorRef<FireAndForgetSlowActor, string> actor = asx.Spawn<FireAndForgetSlowActor, string>("TestSendMultipleMessageToSingleActorNoResponseSlow");
 
         for (int i = 0; i < 10; i++)
             actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
@@ -119,7 +119,7 @@ public class TestSend
         IActorRef<ReplyActor, string, string>[] actorRefs = new IActorRef<ReplyActor, string, string>[10];
 
         for (int i = 0; i < 10; i++)
-            actorRefs[i] = asx.Create<ReplyActor, string, string>();
+            actorRefs[i] = asx.Spawn<ReplyActor, string, string>();
 
         for (int i = 0; i < 10; i++)
             actorRefs[i].Send("TestCreateMultipleActorsAndSendOneMessage");
@@ -138,7 +138,7 @@ public class TestSend
         IActorRef<ReplyActor, string, string>[] actorRefs = new IActorRef<ReplyActor, string, string>[100];
 
         for (int i = 0; i < 100; i++)
-            actorRefs[i] = asx.Create<ReplyActor, string, string>();
+            actorRefs[i] = asx.Spawn<ReplyActor, string, string>();
 
         for (int i = 0; i < 100; i++)
             actorRefs[i].Send("TestCreateMultipleActorsAndSendOneMessage");
@@ -154,7 +154,7 @@ public class TestSend
     {
         ActorSystem asx = new();
 
-        IActorRef<FaultyActor, FaultyMessage> actor = asx.Create<FaultyActor, FaultyMessage>();
+        IActorRef<FaultyActor, FaultyMessage> actor = asx.Spawn<FaultyActor, FaultyMessage>();
 
         actor.Send(new FaultyMessage(FaultyMessageType.Ok));
         actor.Send(new FaultyMessage(FaultyMessageType.Faulty));

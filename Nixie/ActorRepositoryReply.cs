@@ -62,7 +62,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     /// <param name="name"></param>
     /// <returns></returns>
     /// <exception cref="NixieException"></exception>
-    public IActorRef<TActor, TRequest, TResponse> Create(string? name = null)
+    public IActorRef<TActor, TRequest, TResponse> Spawn(string? name = null)
     {
         if (!string.IsNullOrEmpty(name))
         {
