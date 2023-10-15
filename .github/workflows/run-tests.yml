@@ -1,0 +1,35 @@
+name: Run Tests
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:  
+  Backend-Tests:
+    runs-on: ubuntu-latest
+    env:      
+      GIT_BRANCH: ${{ github.head_ref || github.ref_name }}
+      GIT_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}      
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2      
+      - name: Install .NET
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            7.0.x
+            6.0.x
+      - name: Install dotCover
+        run: dotnet tool install JetBrains.dotCover.GlobalTool -g
+      - name: Run Tests 
+        run: (cd Nyx.Tests && dotnet dotcover test --dcOutput=NyxCoverageReport.html --dcReportType=HTML)      
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: |
+            Nyx.Tests/NyxCoverageReport
+            Nyx.Tests/NyxCoverageReport.html
+
