@@ -1,11 +1,10 @@
 ﻿
 namespace Nixie;
 
-public interface IActor<TRequest, TResponse> where TRequest : class where TResponse : class
-{
-    public Task<TResponse> Receive(TRequest message);
-}
-
+/// <summary>
+/// This interface must be implemented by all actors that do not return a response.
+/// </summary>
+/// <typeparam name="TRequest"></typeparam>
 public interface IActor<TRequest> where TRequest : class
 {
     public Task Receive(TRequest message);

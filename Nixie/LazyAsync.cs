@@ -4,6 +4,10 @@ using System.Runtime.ExceptionServices;
 
 namespace Nixie;
 
+/// <summary>
+/// LazyTask utility
+/// </summary>
+/// <typeparam name="T"></typeparam>
 [AsyncMethodBuilder(typeof(LazyTaskMethodBuilder<>))]
 public class LazyTask<T> : INotifyCompletion
 {
@@ -17,10 +21,18 @@ public class LazyTask<T> : INotifyCompletion
 
     private Action? continuation;
 
+    /// <summary>
+    /// Constructor
+    /// </summary>
     internal LazyTask()
     {
     }
 
+    /// <summary>
+    /// Async state machine get result
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     public T? GetResult()
     {
         lock (syncObj)
@@ -35,8 +47,15 @@ public class LazyTask<T> : INotifyCompletion
         }
     }
 
+    /// <summary>
+    /// Returns true if the task is completed
+    /// </summary>
     public bool IsCompleted { get; private set; }
 
+    /// <summary>
+    /// Handler when the task is completed
+    /// </summary>
+    /// <param name="continuation"></param>
     public void OnCompleted(Action continuation)
     {
         lock (syncObj)
@@ -62,6 +81,10 @@ public class LazyTask<T> : INotifyCompletion
         }
     }
 
+    /// <summary>
+    /// Returns the awaiter
+    /// </summary>
+    /// <returns></returns>
     public LazyTask<T> GetAwaiter() => this;
 
     internal void SetResult(T result)

@@ -8,7 +8,14 @@ namespace Nixie;
 /// </summary>
 public sealed class ActorSystem
 {
+    private readonly ActorScheduler scheduler = new();
+
     private readonly ConcurrentDictionary<Type, IActorRepositoryRunnable> repositories = new();
+
+    /// <summary>
+    /// Returns the actor scheduler
+    /// </summary>
+    public ActorScheduler Scheduler => scheduler;
 
     /// <summary>
     /// Creates a new request/response actor and returns a typed reference.
@@ -107,17 +114,36 @@ public sealed class ActorSystem
         return (ActorRepository<TActor, TRequest>)unitOfWorker;
     }
 
+    /// <summary>
+    /// Creates a new periodic timer that will send a message to the specified actor every interval.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="initialDelay"></param>
+    /// <param name="interval"></param>
+    public void AddPeriodicTimer<TActor, TRequest>(string name, IActorRef<TActor, TRequest> actorRef, TRequest request, TimeSpan initialDelay, TimeSpan interval) where TActor : IActor<TRequest> where TRequest : class
+    {
+        scheduler.AddPeriodicTimer(name, actorRef, request, initialDelay, interval);
+    }
+
+    /// <summary>
+    /// Waits for all the actors in the system to finish processing their messages.
+    /// </summary>
+    /// <returns></returns>
     public async Task Wait()
     {
         while (true)
         {
             bool completed = true;
 
-            foreach (KeyValuePair<Type, IActorRepositoryRunnable> x in repositories)
+            foreach (KeyValuePair<Type, IActorRepositoryRunnable> repository in repositories)
             {
                 //Console.WriteLine("{0} HP={1} IsP={2}", x.Key, x.Value.HasPendingMessages(), x.Value.IsProcessing());
 
-                if (x.Value.HasPendingMessages() || x.Value.IsProcessing())
+                if (repository.Value.HasPendingMessages() || repository.Value.IsProcessing())
                 {
                     await Task.Yield();
                     completed = false;
