@@ -99,7 +99,16 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         TActor? actor;
 
         if (args is not null && args.Length > 0)
-            actor = (TActor?)Activator.CreateInstance(typeof(TActor), actorContext, args);
+        {
+            object[] arguments = new object[args.Length + 1];
+
+            arguments[0] = actorContext;
+
+            for (int i = 0; i < args.Length; i++)
+                arguments[i + 1] = args[i];
+
+            actor = (TActor?)Activator.CreateInstance(typeof(TActor), arguments);
+        }
         else
             actor = (TActor?)Activator.CreateInstance(typeof(TActor), actorContext);
 

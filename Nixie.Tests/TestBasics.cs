@@ -130,4 +130,14 @@ public sealed class TestBasics
 
         Assert.Equal(actor2, actor3);
     }
+
+    [Fact]
+    public void TestSpawnFireAndForgetActorProps()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<FireAndForgetPropsActor, string> actor = asx.Spawn<FireAndForgetPropsActor, string>(null, new FireAndForgetPropsSettings());
+
+        Assert.IsAssignableFrom<FireAndForgetPropsActor>(actor.Runner.Actor);
+    }
 }

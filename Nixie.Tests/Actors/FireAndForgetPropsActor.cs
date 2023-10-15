@@ -2,21 +2,19 @@
 namespace Nixie.Tests.Actors;
 
 public sealed class FireAndForgetPropsSettings
-{
-    public int SomeSeting => 100;
-
-    public string SomeOtherSetting => "hello"; 
+{    
+    public string Id => "hello"; 
 }
 
 public sealed class FireAndForgetPropsActor : IActor<string>
 {
-    private readonly string parameter;
+    private readonly FireAndForgetPropsSettings settings;
 
     private readonly Dictionary<string, int> receivedMessages = new();
 
-    public FireAndForgetPropsActor(IActorContext<FireAndForgetPropsActor, string> _, string parameter)
+    public FireAndForgetPropsActor(IActorContext<FireAndForgetPropsActor, string> _, FireAndForgetPropsSettings settings)
     {
-        this.parameter = parameter;
+        this.settings = settings;
     }
 
     public int GetMessages(string id)
@@ -39,8 +37,6 @@ public sealed class FireAndForgetPropsActor : IActor<string>
     {
         await Task.Yield();
 
-        //Console.WriteLine("hello");
-
-        IncrMessage(message);
+        IncrMessage(settings.Id);
     }
 }

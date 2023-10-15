@@ -166,4 +166,39 @@ public class TestSend
 
         Assert.Equal(3, ((FaultyActor)actor.Runner.Actor!).GetMessages());
     }
+
+    [Fact]
+    public async Task TestSpawnFireAndForgetActorProps()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<FireAndForgetPropsActor, string> actor = asx.Spawn<FireAndForgetPropsActor, string>(null, new FireAndForgetPropsSettings());
+
+        Assert.IsAssignableFrom<FireAndForgetPropsActor>(actor.Runner.Actor);
+
+        actor.Send("TestSendMessageToSingleActor");
+
+        await asx.Wait();
+
+        Assert.Equal(1, ((FireAndForgetPropsActor)actor.Runner.Actor!).GetMessages("hello"));
+    }
+
+    [Fact]
+    public async Task TestSpawnFireAndForgetActorPropsMultiple()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<FireAndForgetPropsActor, string> actor = asx.Spawn<FireAndForgetPropsActor, string>(null, new FireAndForgetPropsSettings());
+
+        Assert.IsAssignableFrom<FireAndForgetPropsActor>(actor.Runner.Actor);
+
+        actor.Send("TestSendMessageToSingleActor");
+        actor.Send("TestSendMessageToSingleActor");
+        actor.Send("TestSendMessageToSingleActor");
+        actor.Send("TestSendMessageToSingleActor");
+
+        await asx.Wait();
+
+        Assert.Equal(4, ((FireAndForgetPropsActor)actor.Runner.Actor!).GetMessages("hello"));
+    }
 }
