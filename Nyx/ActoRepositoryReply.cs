@@ -3,13 +3,11 @@ using System.Collections.Concurrent;
 
 namespace Nyx;
 
-
-
-public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable where TActor : IActor<TRequest> where TRequest : class
+public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorRepositoryRunnable where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {
     private readonly ActorSystem actorSystem;
 
-    private readonly ConcurrentDictionary<string, ActorRunner<TActor, TRequest>> actors = new();
+    private readonly ConcurrentDictionary<string, ActorRunner<TActor, TRequest, TResponse>> actors = new();
 
     public ActorRepository(ActorSystem actorSystem)
     {
@@ -18,7 +16,7 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
 
     public bool HasPendingMessages()
     {
-        foreach (KeyValuePair<string, ActorRunner<TActor, TRequest>> context in actors)
+        foreach (KeyValuePair<string, ActorRunner<TActor, TRequest, TResponse>> context in actors)
         {
             if (!context.Value.Inbox.IsEmpty)
                 return true;
@@ -28,15 +26,15 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
 
     public bool IsProcessing()
     {
-        foreach (KeyValuePair<string, ActorRunner<TActor, TRequest>> context in actors)
+        foreach (KeyValuePair<string, ActorRunner<TActor, TRequest, TResponse>> context in actors)
         {
-            if (!context.Value.Processing)
+            if (context.Value.Processing)
                 return true;
         }
         return false;
     }
 
-    public IActorRef<TActor, TRequest> Create(string? name = null)
+    public IActorRef<TActor, TRequest, TResponse> Create(string? name = null)
     {
         if (!string.IsNullOrEmpty(name))
         {
@@ -56,15 +54,15 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
         if (actor is null)
             throw new Exception("Invalid actor");
 
-        ActorRunner<TActor, TRequest> context = new(name, actor);
+        ActorRunner<TActor, TRequest, TResponse> runner = new(name, actor);
 
-        ActorRef<TActor, TRequest>? actorRef = (ActorRef<TActor, TRequest>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest>), context);
+        ActorRef<TActor, TRequest, TResponse>? actorRef = (ActorRef<TActor, TRequest, TResponse>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest, TResponse>), runner);
 
         if (actorRef is null)
             throw new Exception("Invalid props");
 
-        actors.TryAdd(name, context);
+        actors.TryAdd(name, runner);
 
         return actorRef;
-    }   
+    }
 }

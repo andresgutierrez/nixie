@@ -3,17 +3,17 @@ namespace Nyx;
 
 public sealed class ActorRef<TActor, TRequest> : IActorRef<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
 {
-    private readonly ActorContext<TActor, TRequest> context;
+    private readonly ActorRunner<TActor, TRequest> runner;
 
-    public ActorContext<TActor, TRequest> Context => context;
+    public ActorRunner<TActor, TRequest> Runner => runner;
 
-    public ActorRef(ActorContext<TActor, TRequest> context)
+    public ActorRef(ActorRunner<TActor, TRequest> runner)
     {
-        this.context = context;
+        this.runner = runner;
     }
 
     public void Send(TRequest message)
     {
-        context.SendAndTryDeliver(message);
+        runner.SendAndTryDeliver(message);
     }
 }

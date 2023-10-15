@@ -3,23 +3,23 @@ namespace Nyx;
 
 public sealed class ActorRef<TActor, TRequest, TResponse> : IActorRef<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {
-    private readonly ActorContext<TActor, TRequest, TResponse> context;
+    private readonly ActorRunner<TActor, TRequest, TResponse> runner;
 
-    public ActorContext<TActor, TRequest, TResponse> Context => context;
+    public ActorRunner<TActor, TRequest, TResponse> Runner => runner;
 
-    public ActorRef(ActorContext<TActor, TRequest, TResponse> context)
+    public ActorRef(ActorRunner<TActor, TRequest, TResponse> runner)
     {
-        this.context = context;
+        this.runner = runner;
     }
 
     public void Send(TRequest message)
     {
-        context.SendAndTryDeliver(message);
+        runner.SendAndTryDeliver(message);
     }
 
     public async Task<TResponse?> Ask(TRequest message)
     {
-        ActorMessageReply<TRequest, TResponse> promise = context.SendAndTryDeliver(message);
+        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message);
 
         while (!promise.IsCompleted)
             await Task.Yield();

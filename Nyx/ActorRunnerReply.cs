@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace Nyx;
 
-public sealed class ActorContext<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {
     public string Name { get; }
 
@@ -15,7 +15,7 @@ public sealed class ActorContext<TActor, TRequest, TResponse> where TActor : IAc
 
     public bool Processing => processing == 0;
 
-    public ActorContext(string name, IActor<TRequest, TResponse> actor)
+    public ActorRunner(string name, IActor<TRequest, TResponse> actor)
     {
         Name = name;
         Actor = actor;
