@@ -35,13 +35,13 @@ public sealed class ActorContext<TActor, TRequest> where TActor : IActor<TReques
         {
             while (Inbox.TryDequeue(out TRequest? message))
             {
-                Console.WriteLine("Dequeued one {0}", Name);
+                //Console.WriteLine("Dequeued one {0}", Name);
 
                 try
                 {
                     await Actor.Receive(message);
 
-                    Console.WriteLine("Completed one {0}", Name);
+                    //Console.WriteLine("Completed one {0}", Name);
                 }
                 catch (Exception ex)
                 {
@@ -50,6 +50,6 @@ public sealed class ActorContext<TActor, TRequest> where TActor : IActor<TReques
             }
         } while (Interlocked.CompareExchange(ref processing, 1, 0) != 0);
 
-        Console.WriteLine("Finished processing {0} {1} {2}", Name, Inbox.Count, processing);
+        //Console.WriteLine("Finished processing {0} {1} {2}", Name, Inbox.Count, processing);
     }
 }

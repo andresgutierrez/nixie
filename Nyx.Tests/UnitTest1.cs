@@ -53,7 +53,7 @@ public sealed class FireAndForgetActor : IActor<string>
     {
         await Task.Yield();
 
-        Console.WriteLine("hello");
+        //Console.WriteLine("hello");
 
         IncrMessage(message);
     }
@@ -84,8 +84,6 @@ public sealed class FireAndForgetSlowActor : IActor<string>
         await Task.Delay(1000);
 
         IncrMessage(message);
-
-        Console.WriteLine(GetMessages(message));
     }
 }
 
@@ -100,8 +98,8 @@ public sealed class UnitTest1
 
         actor.Send("TestSendMessageToSingleActor");
 
-        await asx.Wait();
-        
+        await Task.Delay(2000);
+
         Assert.Equal(1, ((ReplyActor)actor.Context.Actor).GetMessages("TestSendMessageToSingleActor"));
     }
 
@@ -116,9 +114,23 @@ public sealed class UnitTest1
         actor.Send("TestSendMultipleMessageToSingleActor");
         actor.Send("TestSendMultipleMessageToSingleActor");
 
-        await asx.Wait();
-        
+        await Task.Delay(5000);
+
         Assert.Equal(3, ((ReplyActor)actor.Context.Actor).GetMessages("TestSendMultipleMessageToSingleActor"));
+    }
+
+    [Fact]
+    public async Task TestAskMessageToSingleActor()
+    {
+        ActorSystem asx = new();
+
+        IActorRef<ReplyActor, string, string> actor = asx.Create<ReplyActor, string, string>();
+
+        string? reply = await actor.Ask("TestSendMessageToSingleActor");
+        Assert.NotNull(reply);
+        Assert.Equal("TestSendMessageToSingleActor", reply);        
+
+        Assert.Equal(1, ((ReplyActor)actor.Context.Actor).GetMessages("TestSendMessageToSingleActor"));
     }
 
     [Fact]
@@ -130,7 +142,7 @@ public sealed class UnitTest1
 
         actor.Send("TestSendMessageToSingleActorNoResponse");
 
-        await asx.Wait();
+        await Task.Delay(2000);
 
         Assert.Equal(1, ((FireAndForgetActor)actor.Context.Actor).GetMessages("TestSendMessageToSingleActorNoResponse"));
     }
@@ -146,9 +158,26 @@ public sealed class UnitTest1
         actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
         actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
 
-        await asx.Wait();
+        //await asx.Wait();
 
-        Assert.Equal(3, ((FireAndForgetActor)actor.Context.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
+        await Task.Delay(2000);
+
+        Assert.Equal(3, ((FireAndForgetActor)actor.Context.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));        
+    }
+
+    [Fact]
+    public async Task TestSendMultipleMessageToSingleActorNoResponse2()
+    {
+        ActorSystem asx = new();
+
+        IActorRef<FireAndForgetActor, string> actor = asx.Create<FireAndForgetActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
+
+        for (int i = 0; i < 100; i++)
+            actor.Send("TestSendMultipleMessageToSingleActorNoResponse");        
+
+        await Task.Delay(2000);
+
+        Assert.Equal(100, ((FireAndForgetActor)actor.Context.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
     }
 
     [Fact]
@@ -162,8 +191,27 @@ public sealed class UnitTest1
         actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
         actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");
 
-        await asx.Wait();
+        //await asx.Wait();
+
+        await Task.Delay(5000);
 
         Assert.Equal(3, ((FireAndForgetSlowActor)actor.Context.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
+    }
+
+    [Fact]
+    public async Task TestSendMultipleMessageToSingleActorNoResponseSlow2()
+    {
+        ActorSystem asx = new();
+
+        IActorRef<FireAndForgetSlowActor, string> actor = asx.Create<FireAndForgetSlowActor, string>("TestSendMultipleMessageToSingleActorNoResponseSlow");
+
+        for (int i = 0; i < 10; i++)
+            actor.Send("TestSendMultipleMessageToSingleActorNoResponseSlow");        
+
+        //await asx.Wait();
+
+        await Task.Delay(12000);
+
+        Assert.Equal(10, ((FireAndForgetSlowActor)actor.Context.Actor).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
     }
 }
