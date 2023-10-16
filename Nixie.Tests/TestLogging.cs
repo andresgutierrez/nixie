@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Nixie.Tests;
 
+[Collection("Nixie")]
 public class TestLogging
 {
     private readonly ILoggerFactory loggerFactory;

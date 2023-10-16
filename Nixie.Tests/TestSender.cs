@@ -3,6 +3,7 @@ using Nixie.Tests.Actors;
 
 namespace Nixie.Tests;
 
+[Collection("Nixie")]
 public class TestSender
 {
     [Fact]

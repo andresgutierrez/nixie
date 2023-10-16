@@ -17,6 +17,7 @@ internal sealed class SomeService : ISomeService
     }
 }
 
+[Collection("Nixie")]
 public class TestDI
 {
     [Fact]
