@@ -65,11 +65,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
         Inbox.Enqueue(messageReply);
 
         if (1 == Interlocked.Exchange(ref processing, 0))
-            _ = Task.Run(DeliverMessages).ContinueWith(t =>
-            {
-                if (t.IsFaulted && t.Exception is not null)
-                    throw t.Exception;
-            });
+            _ = DeliverMessages();
 
         return messageReply;
     }
@@ -85,27 +81,34 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
 
     private async Task DeliverMessages()
     {
-        if (Actor is null || shutdown == 0)
-            return;
-
-        do
+        try
         {
-            while (Inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? messageReply))
+            if (Actor is null || shutdown == 0)
+                return;
+
+            do
             {
-                if (shutdown == 0)
-                    break;
-
-                try
+                while (Inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? messageReply))
                 {
-                    messageReply.SetCompleted(await Actor.Receive(messageReply.Request));
-                }
-                catch (Exception ex)
-                {
-                    messageReply.SetCompleted(null);
+                    if (shutdown == 0)
+                        break;
 
-                    Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
+                    try
+                    {
+                        messageReply.SetCompleted(await Actor.Receive(messageReply.Request));
+                    }
+                    catch (Exception ex)
+                    {
+                        messageReply.SetCompleted(null);
+
+                        Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
+                    }
                 }
-            }
-        } while (shutdown == 1 && (Interlocked.CompareExchange(ref processing, 1, 0) != 0));
+            } while (shutdown == 1 && (Interlocked.CompareExchange(ref processing, 1, 0) != 0));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
+        }
     }
 }

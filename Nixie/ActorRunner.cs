@@ -54,7 +54,7 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
         Inbox.Enqueue(message);
 
         if (1 == Interlocked.Exchange(ref processing, 0))
-            _ = Task.Run(DeliverMessages);
+            _ = DeliverMessages();
     }
 
     /// <summary>
@@ -68,25 +68,32 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
 
     private async Task DeliverMessages()
     {
-        if (Actor is null || shutdown == 0)
-            return;
+        try
+        {
+            if (Actor is null || shutdown == 0)
+                return;
 
-        do
-        {            
-            while (Inbox.TryDequeue(out TRequest? message))
+            do
             {
-                if (shutdown == 0)
-                    break;
+                while (Inbox.TryDequeue(out TRequest? message))
+                {
+                    if (shutdown == 0)
+                        break;
 
-                try
-                {
-                    await Actor.Receive(message);
+                    try
+                    {
+                        await Actor.Receive(message);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
-                }
-            }
-        } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
+            } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
+        }
     }
 }
