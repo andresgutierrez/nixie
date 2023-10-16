@@ -8,7 +8,7 @@ public class TestSend
     [Fact]
     public async Task TestSendMessageToSingleActor()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string> actor = asx.Spawn<ReplyActor, string, string>();
 
@@ -22,7 +22,7 @@ public class TestSend
     [Fact]
     public async Task TestSendMultipleMessageToSingleActor()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string> actor = asx.Spawn<ReplyActor, string, string>();
 
@@ -38,7 +38,7 @@ public class TestSend
     [Fact]
     public async Task TestSendMessageToSingleActorNoResponse()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<FireAndForgetActor, string> actor = asx.Spawn<FireAndForgetActor, string>();
 
@@ -52,7 +52,7 @@ public class TestSend
     [Fact]
     public async Task TestSendMultipleMessageToSingleActorNoResponse()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<FireAndForgetActor, string> actor = asx.Spawn<FireAndForgetActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
 
@@ -68,7 +68,7 @@ public class TestSend
     [Fact]
     public async Task TestSendMultipleMessageToSingleActorNoResponse2()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<FireAndForgetActor, string> actor = asx.Spawn<FireAndForgetActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
 
@@ -83,7 +83,7 @@ public class TestSend
     [Fact]
     public async Task TestSendMultipleMessageToSingleActorNoResponseSlow()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<FireAndForgetSlowActor, string> actor = asx.Spawn<FireAndForgetSlowActor, string>("TestSendMultipleMessageToSingleActorNoResponseSlow");
 
@@ -99,7 +99,7 @@ public class TestSend
     [Fact]
     public async Task TestSendMultipleMessageToSingleActorNoResponseSlow2()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<FireAndForgetSlowActor, string> actor = asx.Spawn<FireAndForgetSlowActor, string>("TestSendMultipleMessageToSingleActorNoResponseSlow");
 
@@ -114,7 +114,7 @@ public class TestSend
     [Fact]
     public async Task TestCreateMultipleActorsAndSendOneMessage()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string>[] actorRefs = new IActorRef<ReplyActor, string, string>[10];
 
@@ -133,7 +133,7 @@ public class TestSend
     [Fact]
     public async Task TestCreateMultipleActorsAndSendOneMessage2()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<ReplyActor, string, string>[] actorRefs = new IActorRef<ReplyActor, string, string>[100];
 
@@ -152,7 +152,7 @@ public class TestSend
     [Fact]
     public async Task TestSendMessageToFaultyActor()
     {
-        ActorSystem asx = new();
+        using ActorSystem asx = new();
 
         IActorRef<FaultyActor, FaultyMessage> actor = asx.Spawn<FaultyActor, FaultyMessage>();
 

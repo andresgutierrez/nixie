@@ -34,9 +34,15 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         {
             Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)> lazyValue = actor.Value;
 
-            if (lazyValue.IsValueCreated && !lazyValue.Value.runner.Inbox.IsEmpty)
-                return true;
+            if (lazyValue.IsValueCreated)
+            {
+                ActorRunner<TActor, TRequest, TResponse> runner = lazyValue.Value.runner;
+
+                if (!runner.IsShutdown && !lazyValue.Value.runner.Inbox.IsEmpty)
+                    return true;
+            }
         }
+
         return false;
     }
 
@@ -50,9 +56,15 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         {
             Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)> lazyValue = actor.Value;
 
-            if (lazyValue.IsValueCreated && lazyValue.Value.runner.Processing)
-                return true;
+            if (lazyValue.IsValueCreated)
+            {
+                ActorRunner<TActor, TRequest, TResponse> runner = lazyValue.Value.runner;
+
+                if (!runner.IsShutdown && runner.IsProcessing)
+                    return true;
+            }
         }
+
         return false;
     }
 
@@ -133,5 +145,47 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
             return actor.Value.actorRef;
 
         return null;
+    }
+
+    /// <summary>
+    /// Shutdowns an actor by its name
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public bool Shutdown(string name)
+    {
+        name = name.ToLowerInvariant();
+
+        if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
+        {
+            if (actor.Value.runner.Shutdown())
+            {
+                actors.TryRemove(name, out _);
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Shutdowns an actor by its reference
+    /// </summary>
+    /// <param name="actorRef"></param>
+    /// <returns></returns>
+    public bool Shutdown(IActorRef<TActor, TRequest, TResponse> actorRef)
+    {
+        string name = actorRef.Runner.Name;
+
+        if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
+        {
+            if (actor.Value.runner.Shutdown())
+            {
+                actors.TryRemove(name, out _);
+                return true;
+            }
+        }
+
+        return true;
     }
 }

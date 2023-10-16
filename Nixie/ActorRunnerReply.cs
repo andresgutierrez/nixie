@@ -11,12 +11,14 @@ namespace Nixie;
 /// <typeparam name="TResponse"></typeparam>
 public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {
+    private int processing = 1;
+
+    private int shutdown = 1;
+
     /// <summary>
     /// The name/id of the actor.
     /// </summary>
-    public string Name { get; }
-
-    private int processing = 1;
+    public string Name { get; }    
 
     /// <summary>
     /// The inbox of the actor.
@@ -31,7 +33,12 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// <summary>
     /// True if the actor is processing a message.
     /// </summary>
-    public bool Processing => processing == 0;
+    public bool IsProcessing => processing == 0;
+
+    /// <summary>
+    /// True if the actor is shutdown
+    /// </summary>
+    public bool IsShutdown => shutdown == 0;
 
     /// <summary>
     /// Constructor
@@ -49,8 +56,11 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// <param name="message"></param>
     /// <returns></returns>
     public ActorMessageReply<TRequest, TResponse> SendAndTryDeliver(TRequest message)
-    {
+    {        
         ActorMessageReply<TRequest, TResponse> messageReply = new(message);
+
+        if (shutdown == 0)
+            return messageReply;
 
         Inbox.Enqueue(messageReply);
 
@@ -64,15 +74,27 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
         return messageReply;
     }
 
+    /// <summary>
+    /// Try to shutdown the actor and returns a bool indicating success
+    /// </summary>
+    /// <returns></returns>
+    public bool Shutdown()
+    {
+        return 1 == Interlocked.Exchange(ref shutdown, 0);
+    }
+
     private async Task DeliverMessages()
     {
-        if (Actor is null)
+        if (Actor is null || shutdown == 0)
             return;
 
         do
         {
             while (Inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? messageReply))
             {
+                if (shutdown == 0)
+                    break;
+
                 try
                 {
                     messageReply.SetCompleted(await Actor.Receive(messageReply.Request));
@@ -84,6 +106,6 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
                     Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
                 }
             }
-        } while (Interlocked.CompareExchange(ref processing, 1, 0) != 0);
+        } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
     }
 }
