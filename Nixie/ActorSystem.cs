@@ -11,6 +11,8 @@ public sealed class ActorSystem : IDisposable
 {
     private readonly ActorScheduler scheduler = new();
 
+    private readonly IServiceProvider? serviceProvider;
+
     private readonly ConcurrentDictionary<Type, Lazy<IActorRepositoryRunnable>> repositories = new();
 
     private readonly IActorRef<NobodyActor, object> nobody;
@@ -25,8 +27,13 @@ public sealed class ActorSystem : IDisposable
     /// </summary>
     public ActorScheduler Scheduler => scheduler;
 
-    public ActorSystem()
+    /// <summary>
+    /// Constructor
+    /// </summary>
+    public ActorSystem(IServiceProvider? serviceProvider = null)
     {
+        this.serviceProvider = serviceProvider;
+
         nobody = Spawn<NobodyActor, object>();
     }
 
@@ -172,7 +179,7 @@ public sealed class ActorSystem : IDisposable
     private ActorRepository<TActor, TRequest, TResponse> CreateRepository<TActor, TRequest, TResponse>()
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
-        ActorRepository<TActor, TRequest, TResponse> repository = new(this);
+        ActorRepository<TActor, TRequest, TResponse> repository = new(this, serviceProvider);
         return repository;
     }
 
@@ -196,7 +203,7 @@ public sealed class ActorSystem : IDisposable
     private ActorRepository<TActor, TRequest> CreateRepository<TActor, TRequest>()
         where TActor : IActor<TRequest> where TRequest : class
     {
-        ActorRepository<TActor, TRequest> repository = new(this);
+        ActorRepository<TActor, TRequest> repository = new(this, serviceProvider);
         return repository;
     }
 

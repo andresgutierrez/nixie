@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
 
 namespace Nixie;
@@ -13,15 +14,19 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
 {
     private readonly ActorSystem actorSystem;
 
+    private readonly IServiceProvider? serviceProvider;
+
     private readonly ConcurrentDictionary<string, Lazy<(ActorRunner<TActor, TRequest>, ActorRef<TActor, TRequest>)>> actors = new();
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="actorSystem"></param>
-    public ActorRepository(ActorSystem actorSystem)
+    /// <param name="serviceProvider"></param>
+    public ActorRepository(ActorSystem actorSystem, IServiceProvider? serviceProvider)
     {
         this.actorSystem = actorSystem;
+        this.serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -119,10 +124,18 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
             for (int i = 0; i < args.Length; i++)
                 arguments[i + 1] = args[i];
 
-            actor = (TActor?)Activator.CreateInstance(typeof(TActor), arguments);
+            if (serviceProvider is not null)
+                actor = (TActor?)ActivatorUtilities.CreateInstance(serviceProvider, typeof(TActor), arguments);
+            else
+                actor = (TActor?)Activator.CreateInstance(typeof(TActor), arguments);
         }
         else
-            actor = (TActor?)Activator.CreateInstance(typeof(TActor), actorContext);
+        {
+            if (serviceProvider is not null)
+                actor = (TActor?)ActivatorUtilities.CreateInstance(serviceProvider, typeof(TActor), actorContext);
+            else
+                actor = (TActor?)Activator.CreateInstance(typeof(TActor), actorContext);
+        }
 
         if (actor is null)
             throw new NixieException("Invalid actor");
