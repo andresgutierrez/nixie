@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using Nixie.Tests.Actors;
 
 namespace Nixie.Tests;
@@ -9,7 +10,16 @@ public sealed class TestScheduler
     [Fact]
     public async void TestCreatePeriodicTimer()
     {
-        using ActorSystem asx = new();
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddFilter("Nixie", LogLevel.Debug)
+                .AddConsole();
+        });
+
+        ILogger logger = loggerFactory.CreateLogger<TestSendMessages>();
+
+        using ActorSystem asx = new(logger: logger);
 
         IActorRef<PeriodicTimerActor, string> actor = asx.Spawn<PeriodicTimerActor, string>();
 
@@ -25,7 +35,16 @@ public sealed class TestScheduler
     [Fact]
     public async void TestCreatePeriodicTimerExternalStop()
     {
-        using ActorSystem asx = new();
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddFilter("Nixie", LogLevel.Debug)
+                .AddConsole();
+        });
+
+        ILogger logger = loggerFactory.CreateLogger<TestSendMessages>();
+
+        using ActorSystem asx = new(logger: logger);
 
         IActorRef<PeriodicTimerActor, string> actor = asx.Spawn<PeriodicTimerActor, string>();
 
@@ -49,7 +68,16 @@ public sealed class TestScheduler
     [Fact]
     public void TestCreatePeriodicTimerExternalStopTwice()
     {
-        using ActorSystem asx = new();
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddFilter("Nixie", LogLevel.Debug)
+                .AddConsole();
+        });
+
+        ILogger logger = loggerFactory.CreateLogger<TestSendMessages>();
+
+        using ActorSystem asx = new(logger: logger);
 
         IActorRef<PeriodicTimerActor, string> actor = asx.Spawn<PeriodicTimerActor, string>();
 

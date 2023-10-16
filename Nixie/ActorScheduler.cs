@@ -1,5 +1,6 @@
 ﻿
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 namespace Nixie;
 
@@ -8,9 +9,16 @@ namespace Nixie;
 /// </summary>
 public class ActorScheduler : IDisposable
 {
+    private readonly ILogger? logger;
+
     private readonly ConcurrentDictionary<object, Lazy<ConcurrentBag<Timer>>> onceTimers = new();
 
     private readonly ConcurrentDictionary<object, Lazy<ConcurrentDictionary<string, Lazy<Timer>>>> periodicTimers = new();
+
+    public ActorScheduler(ILogger? logger)
+    {
+        this.logger = logger;
+    }
 
     /// <summary>
     /// Schedules a message to be sent to an actor once after a specified delay at a specified interval.
@@ -184,13 +192,27 @@ public class ActorScheduler : IDisposable
     private void SendScheduledMessage<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request)
         where TActor : IActor<TRequest> where TRequest : class
     {
-        actorRef.Send(request);
+        try
+        {
+            actorRef.Send(request);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError("{Ex}", ex.Message);
+        }
     }
 
     private void SendScheduledMessage<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request)
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
-        actorRef.Send(request);
+        try
+        {
+            actorRef.Send(request);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError("{Ex}", ex.Message);
+        }
     }
 
     private void StopAllTimersInternal(object actorRef)

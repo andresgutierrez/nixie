@@ -11,7 +11,7 @@ namespace Nixie;
 /// </summary>
 public sealed class ActorSystem : IDisposable
 {
-    private readonly ActorScheduler scheduler = new();
+    private readonly ActorScheduler scheduler;
 
     private readonly IServiceProvider? serviceProvider;
 
@@ -40,6 +40,7 @@ public sealed class ActorSystem : IDisposable
     {
         this.serviceProvider = serviceProvider;
         this.logger = logger;
+        this.scheduler = new(logger);
 
         nobody = Spawn<NobodyActor, object>();
     }
