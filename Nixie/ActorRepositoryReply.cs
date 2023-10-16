@@ -1,6 +1,7 @@
 ﻿
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Nixie;
 
@@ -16,6 +17,8 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
 
     private readonly IServiceProvider? serviceProvider;
 
+    private readonly ILogger? logger;
+
     private readonly ConcurrentDictionary<string, Lazy<(ActorRunner<TActor, TRequest, TResponse>, ActorRef<TActor, TRequest, TResponse>)>> actors = new();
 
     /// <summary>
@@ -23,10 +26,12 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     /// </summary>
     /// <param name="actorSystem"></param>
     /// <param name="serviceProvider"></param>
-    public ActorRepository(ActorSystem actorSystem, IServiceProvider? serviceProvider)
+    /// <param name="logger"></param>
+    public ActorRepository(ActorSystem actorSystem, IServiceProvider? serviceProvider, ILogger? logger)
     {
         this.actorSystem = actorSystem;
         this.serviceProvider = serviceProvider;
+        this.logger = logger;
     }
 
     /// <summary>
@@ -104,14 +109,14 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
 
     private (ActorRunner<TActor, TRequest, TResponse>, ActorRef<TActor, TRequest, TResponse>) CreateInternal(string name, params object[]? args)
     {
-        ActorRunner<TActor, TRequest, TResponse> runner = new(actorSystem, name);
+        ActorRunner<TActor, TRequest, TResponse> runner = new(actorSystem, logger, name);
 
         ActorRef<TActor, TRequest, TResponse>? actorRef = (ActorRef<TActor, TRequest, TResponse>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest, TResponse>), runner);
 
         if (actorRef is null)
             throw new NixieException("Invalid props");
 
-        ActorContext<TActor, TRequest, TResponse> actorContext = new(actorSystem, actorRef);
+        ActorContext<TActor, TRequest, TResponse> actorContext = new(actorSystem, logger, actorRef);
 
         TActor? actor;
 

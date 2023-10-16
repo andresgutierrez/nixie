@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using Nixie.Tests.Actors;
 
 namespace Nixie.Tests;
@@ -117,7 +118,14 @@ public class TestAskReplies
     [Fact]
     public async Task TestCreateMultiplePingPingAndAskRace()
     {
-        using ActorSystem asx = new();
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddFilter("Nixie", LogLevel.Debug)
+                .AddConsole();
+        });
+
+        using ActorSystem asx = new(logger: loggerFactory.CreateLogger<TestSendMessages>());
 
         IActorRef<PingActor, string, string>[] actorRefs = new IActorRef<PingActor, string, string>[100];
 
@@ -152,7 +160,14 @@ public class TestAskReplies
     [Fact]
     public async Task TestCreateMultiplePingPingAndAskMultipleRace()
     {
-        using ActorSystem asx = new();
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddFilter("Nixie", LogLevel.Debug)
+                .AddConsole();
+        });
+
+        using ActorSystem asx = new(logger: loggerFactory.CreateLogger<TestSendMessages>());
 
         IActorRef<PingActor, string, string>[] actorRefs = new IActorRef<PingActor, string, string>[100];
 

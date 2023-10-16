@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using Nixie.Tests.Actors;
 
 namespace Nixie.Tests;
@@ -152,7 +153,16 @@ public class TestSendMessages
     [Fact]
     public async Task TestSendMessageToFaultyActor()
     {
-        using ActorSystem asx = new();
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddFilter("Nixie", LogLevel.Debug)
+                .AddConsole();
+        });
+
+        ILogger logger = loggerFactory.CreateLogger<TestSendMessages>();
+
+        using ActorSystem asx = new(logger: logger);
 
         IActorRef<FaultyActor, FaultyMessage> actor = asx.Spawn<FaultyActor, FaultyMessage>();
 

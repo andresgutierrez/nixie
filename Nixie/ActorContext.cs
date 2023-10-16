@@ -1,4 +1,6 @@
 ﻿
+using Microsoft.Extensions.Logging;
+
 namespace Nixie;
 
 /// <summary>
@@ -9,12 +11,19 @@ public sealed class ActorContext<TActor, TRequest> : IActorContext<TActor, TRequ
 {
     private readonly ActorSystem actorSystem;
 
+    private readonly ILogger? logger;
+
     private readonly ActorRef<TActor, TRequest> self;
 
     /// <summary>
     /// Returns the actor system
     /// </summary>
     public ActorSystem ActorSystem => actorSystem;
+
+    /// <summary>
+    /// Returns the actor system logger
+    /// </summary>
+    public ILogger? Logger => logger;
 
     /// <summary>
     /// Returns a reference to the current actor
@@ -30,9 +39,12 @@ public sealed class ActorContext<TActor, TRequest> : IActorContext<TActor, TRequ
     /// Creates a new actor context.
     /// </summary>
     /// <param name="actorSystem"></param>
-    public ActorContext(ActorSystem actorSystem, ActorRef<TActor, TRequest> self)
+    /// <param name="logger"></param>
+    /// <param name="self"></param>
+    public ActorContext(ActorSystem actorSystem, ILogger? logger, ActorRef<TActor, TRequest> self)
     {
         this.actorSystem = actorSystem;
+        this.logger = logger;
         this.self = self;
     }
 }

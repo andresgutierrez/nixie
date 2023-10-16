@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using Nixie.Actors;
 using System.Collections.Concurrent;
 
@@ -12,6 +13,8 @@ public sealed class ActorSystem : IDisposable
     private readonly ActorScheduler scheduler = new();
 
     private readonly IServiceProvider? serviceProvider;
+
+    private readonly ILogger? logger;
 
     private readonly ConcurrentDictionary<Type, Lazy<IActorRepositoryRunnable>> repositories = new();
 
@@ -30,9 +33,12 @@ public sealed class ActorSystem : IDisposable
     /// <summary>
     /// Constructor
     /// </summary>
-    public ActorSystem(IServiceProvider? serviceProvider = null)
+    /// <param name="serviceProvider"></param>
+    /// <param name="logger"></param>
+    public ActorSystem(IServiceProvider? serviceProvider = null, ILogger? logger = null)
     {
         this.serviceProvider = serviceProvider;
+        this.logger = logger;
 
         nobody = Spawn<NobodyActor, object>();
     }
@@ -179,7 +185,7 @@ public sealed class ActorSystem : IDisposable
     private ActorRepository<TActor, TRequest, TResponse> CreateRepository<TActor, TRequest, TResponse>()
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
-        ActorRepository<TActor, TRequest, TResponse> repository = new(this, serviceProvider);
+        ActorRepository<TActor, TRequest, TResponse> repository = new(this, serviceProvider, logger);
         return repository;
     }
 
@@ -203,7 +209,7 @@ public sealed class ActorSystem : IDisposable
     private ActorRepository<TActor, TRequest> CreateRepository<TActor, TRequest>()
         where TActor : IActor<TRequest> where TRequest : class
     {
-        ActorRepository<TActor, TRequest> repository = new(this, serviceProvider);
+        ActorRepository<TActor, TRequest> repository = new(this, serviceProvider, logger);
         return repository;
     }
 

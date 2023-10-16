@@ -1,5 +1,6 @@
 ﻿
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 namespace Nixie;
 
@@ -12,6 +13,8 @@ namespace Nixie;
 public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {
     private readonly ActorSystem actorSystem;
+
+    private readonly ILogger? logger;
 
     private int processing = 1;
 
@@ -51,10 +54,13 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// Constructor
     /// </summary>
     /// <param name="actorSystem"></param>
+    /// <param name="logger"></param>
     /// <param name="name"></param>
-    public ActorRunner(ActorSystem actorSystem, string name)
+    public ActorRunner(ActorSystem actorSystem, ILogger? logger, string name)
     {
         this.actorSystem = actorSystem;
+        this.logger = logger;
+
         Name = name;
     }
 
@@ -118,14 +124,14 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
                     {
                         message.SetCompleted(null);
 
-                        Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
+                        logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
                     }
                 }
             } while (shutdown == 1 && (Interlocked.CompareExchange(ref processing, 1, 0) != 0));
         }
         catch (Exception ex)
         {
-            Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
+            logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
         }
     }
 }

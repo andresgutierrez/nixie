@@ -1,4 +1,6 @@
 ﻿
+using Microsoft.Extensions.Logging;
+
 namespace Nixie;
 
 /// <summary>
@@ -12,6 +14,11 @@ public interface IActorContext<TActor, TRequest> where TActor : IActor<TRequest>
     /// Returns the actor system
     /// </summary>
     public ActorSystem ActorSystem { get; }
+
+    /// <summary>
+    /// Returns the actor system logger
+    /// </summary>
+    public ILogger? Logger { get; }
 
     /// <summary>
     /// Returns a reference to the current actor

@@ -1,6 +1,7 @@
 ﻿
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Nixie;
 
@@ -16,6 +17,8 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
 
     private readonly IServiceProvider? serviceProvider;
 
+    private readonly ILogger? logger;
+
     private readonly ConcurrentDictionary<string, Lazy<(ActorRunner<TActor, TRequest>, ActorRef<TActor, TRequest>)>> actors = new();
 
     /// <summary>
@@ -23,10 +26,11 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
     /// </summary>
     /// <param name="actorSystem"></param>
     /// <param name="serviceProvider"></param>
-    public ActorRepository(ActorSystem actorSystem, IServiceProvider? serviceProvider)
+    public ActorRepository(ActorSystem actorSystem, IServiceProvider? serviceProvider, ILogger? logger)
     {
         this.actorSystem = actorSystem;
         this.serviceProvider = serviceProvider;
+        this.logger = logger;
     }
 
     /// <summary>
@@ -104,14 +108,14 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
 
     private (ActorRunner<TActor, TRequest>, ActorRef<TActor, TRequest>) CreateInternal(string name, params object[]? args)
     {
-        ActorRunner<TActor, TRequest> runner = new(actorSystem, name);
+        ActorRunner<TActor, TRequest> runner = new(actorSystem, logger, name);
 
         ActorRef<TActor, TRequest>? actorRef = (ActorRef<TActor, TRequest>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest>), runner);
 
         if (actorRef is null)
             throw new NixieException("Invalid actor props");
 
-        ActorContext<TActor, TRequest> actorContext = new(actorSystem, actorRef);
+        ActorContext<TActor, TRequest> actorContext = new(actorSystem, logger, actorRef);
 
         TActor? actor;
 
