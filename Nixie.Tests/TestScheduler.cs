@@ -16,7 +16,9 @@ public sealed class TestScheduler
 
         await Task.Delay(5500);
 
-        Assert.True(((PeriodicTimerActor)actor.Runner.Actor!).GetMessages("hello") >= 5);
+        int numberMessages = ((PeriodicTimerActor)actor.Runner.Actor!).GetMessages("hello");
+
+        Assert.Equal(6, numberMessages);
     }
 
     [Fact]
@@ -34,13 +36,13 @@ public sealed class TestScheduler
 
         int numberMessages = ((PeriodicTimerActor)actor.Runner.Actor!).GetMessages("hello");
 
-        Assert.True(numberMessages == 2 || numberMessages == 3);
+        Assert.Equal(3, numberMessages);
 
         await Task.Delay(2500);
 
         numberMessages = ((PeriodicTimerActor)actor.Runner.Actor!).GetMessages("hello");
 
-        Assert.True(numberMessages == 2 || numberMessages == 3);
+        Assert.Equal(3, numberMessages);
     }
 
     [Fact]
