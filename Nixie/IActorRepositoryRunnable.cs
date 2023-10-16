@@ -10,11 +10,11 @@ public interface IActorRepositoryRunnable
     /// Returns true if there are pending messages to process.
     /// </summary>
     /// <returns></returns>
-    public bool HasPendingMessages();
+    public bool HasPendingMessages(out string? actorName);
 
     /// <summary>
     /// Returns true if the repository is processing messages.
     /// </summary>
     /// <returns></returns>
-    public bool IsProcessing();
+    public bool IsProcessing(out string? actorName);
 }

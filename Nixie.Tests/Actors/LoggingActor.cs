@@ -19,4 +19,3 @@ public class LoggingActor : IActor<string>
         context.Logger?.LogInformation("Message: {Message}", message);
     }
 }
-

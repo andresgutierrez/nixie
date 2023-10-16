@@ -38,7 +38,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     /// Check if any of the actors have pending messages
     /// </summary>
     /// <returns></returns>
-    public bool HasPendingMessages()
+    public bool HasPendingMessages(out string? actorName)
     {
         foreach (KeyValuePair<string, Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>> actor in actors)
         {
@@ -49,10 +49,14 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
                 ActorRunner<TActor, TRequest, TResponse> runner = lazyValue.Value.runner;
 
                 if (!runner.IsShutdown && !lazyValue.Value.runner.Inbox.IsEmpty)
+                {
+                    actorName = runner.Name;
                     return true;
+                }
             }
         }
 
+        actorName = null;
         return false;
     }
 
@@ -60,7 +64,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     /// Check if any of the actors are processing messages
     /// </summary>
     /// <returns></returns>
-    public bool IsProcessing()
+    public bool IsProcessing(out string? actorName)
     {
         foreach (KeyValuePair<string, Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>> actor in actors)
         {
@@ -71,10 +75,14 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
                 ActorRunner<TActor, TRequest, TResponse> runner = lazyValue.Value.runner;
 
                 if (!runner.IsShutdown && runner.IsProcessing)
+                {
+                    actorName = runner.Name;
                     return true;
+                }
             }
         }
 
+        actorName = null;
         return false;
     }
 

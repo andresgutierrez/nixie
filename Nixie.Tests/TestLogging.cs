@@ -1,6 +1,7 @@
 ﻿
 using Nixie.Tests.Actors;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Nixie.Tests;
 
@@ -31,11 +32,29 @@ public class TestLogging
 
         Assert.IsAssignableFrom<LoggingActor>(actor.Runner.Actor);
 
-        actor.Send("message");
+        actor.Send("TestAddLogging");
 
         await asx.Wait();
+    }
 
-        //Assert.Equal(5, ((LoggingActor)actor.Runner.Actor!).GetMessages());
+    [Fact]
+    public async Task TestAddLoggingArgs()
+    {
+        IServiceCollection services = new ServiceCollection();
+
+        services.AddSingleton(typeof(ILogger<TestLogging>), logger);
+
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        using ActorSystem asx = new(serviceProvider);
+
+        IActorRef<LoggingArgsActor, string> actor = asx.Spawn<LoggingArgsActor, string>();
+
+        Assert.IsAssignableFrom<LoggingArgsActor>(actor.Runner.Actor);
+
+        actor.Send("TestAddLoggingArgs");
+
+        await asx.Wait();        
     }
 }
 

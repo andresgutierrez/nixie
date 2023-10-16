@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Nixie.Actors;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Nixie;
 
@@ -330,6 +331,9 @@ public sealed class ActorSystem : IDisposable
     /// <returns></returns>
     public async Task Wait()
     {
+        Stopwatch stopWatch = new();
+        string? pendingActorName = null, processingName = null;
+
         while (true)
         {
             bool completed = true;
@@ -341,7 +345,7 @@ public sealed class ActorSystem : IDisposable
                 if (!lazyRepository.IsValueCreated)
                     continue;
 
-                if (lazyRepository.Value.HasPendingMessages() || lazyRepository.Value.IsProcessing())
+                if (lazyRepository.Value.HasPendingMessages(out pendingActorName) || lazyRepository.Value.IsProcessing(out processingName))
                 {
                     await Task.Yield();
                     completed = false;
@@ -351,6 +355,12 @@ public sealed class ActorSystem : IDisposable
 
             if (completed)
                 break;
+
+            if (stopWatch.ElapsedMilliseconds > 10000)
+            {
+                logger?.LogWarning("Timeout waiting for actor {PendingActorName}/{ProcessingName}", pendingActorName, processingName);
+                break;
+            }
         }
     }
 
