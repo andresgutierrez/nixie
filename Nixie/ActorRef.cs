@@ -6,7 +6,7 @@ namespace Nixie;
 /// </summary>
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
-public sealed class ActorRef<TActor, TRequest> : IActorRef<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
+public sealed class ActorRef<TActor, TRequest> : IGenericActorRef, IActorRef<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
 {
     private readonly ActorRunner<TActor, TRequest> runner;
 
@@ -30,6 +30,17 @@ public sealed class ActorRef<TActor, TRequest> : IActorRef<TActor, TRequest> whe
     /// <param name="message"></param>
     public void Send(TRequest message)
     {
-        runner.SendAndTryDeliver(message);
+        runner.SendAndTryDeliver(message, null);
+    }
+
+    /// <summary>
+    /// Sends a message to the actor without expecting response
+    /// and specifying the sender
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="sender"></param>
+    public void Send(TRequest message, IGenericActorRef sender)
+    {
+        runner.SendAndTryDeliver(message, sender);
     }
 }

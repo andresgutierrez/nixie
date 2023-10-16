@@ -99,12 +99,12 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
 
     private (ActorRunner<TActor, TRequest>, ActorRef<TActor, TRequest>) CreateInternal(string name, params object[]? args)
     {
-        ActorRunner<TActor, TRequest> runner = new(name);
+        ActorRunner<TActor, TRequest> runner = new(actorSystem, name);
 
         ActorRef<TActor, TRequest>? actorRef = (ActorRef<TActor, TRequest>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest>), runner);
 
         if (actorRef is null)
-            throw new NixieException("Invalid props");
+            throw new NixieException("Invalid actor props");
 
         ActorContext<TActor, TRequest> actorContext = new(actorSystem, actorRef);
 
@@ -127,6 +127,7 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
         if (actor is null)
             throw new NixieException("Invalid actor");
 
+        runner.ActorContext = actorContext;
         runner.Actor = actor;
 
         return (runner, actorRef);
@@ -160,6 +161,7 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
         {
             if (actor.Value.runner.Shutdown())
             {
+                actorSystem.StopAllTimers(actor.Value.actorRef);
                 actors.TryRemove(name, out _);
                 return true;
             }
@@ -181,6 +183,7 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
         {
             if (actor.Value.runner.Shutdown())
             {
+                actorSystem.StopAllTimers(actor.Value.actorRef);
                 actors.TryRemove(name, out _);
                 return true;
             }

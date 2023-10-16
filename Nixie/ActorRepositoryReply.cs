@@ -99,7 +99,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
 
     private (ActorRunner<TActor, TRequest, TResponse>, ActorRef<TActor, TRequest, TResponse>) CreateInternal(string name, params object[]? args)
     {
-        ActorRunner<TActor, TRequest, TResponse> runner = new(name);
+        ActorRunner<TActor, TRequest, TResponse> runner = new(actorSystem, name);
 
         ActorRef<TActor, TRequest, TResponse>? actorRef = (ActorRef<TActor, TRequest, TResponse>?)Activator.CreateInstance(typeof(ActorRef<TActor, TRequest, TResponse>), runner);
 
@@ -127,6 +127,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         if (actor is null)
             throw new NixieException("Invalid actor");
 
+        runner.ActorContext = actorContext;
         runner.Actor = actor;
 
         return (runner, actorRef);

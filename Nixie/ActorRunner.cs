@@ -10,6 +10,8 @@ namespace Nixie;
 /// <typeparam name="TRequest"></typeparam>
 public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
 {
+    private readonly ActorSystem actorSystem;
+
     private int processing = 1;
 
     private int shutdown = 1;
@@ -22,23 +24,36 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     /// <summary>
     /// The actor's inbox
     /// </summary>
-    public ConcurrentQueue<TRequest> Inbox { get; } = new();
+    public ConcurrentQueue<ActorMessage<TRequest>> Inbox { get; } = new();
 
     /// <summary>
     /// Reference to the actual actor
     /// </summary>
     public IActor<TRequest>? Actor { get; set; }
 
+    /// <summary>
+    /// Reference to the current actor context
+    /// </summary>
+    public ActorContext<TActor, TRequest>? ActorContext { get; set; }
+
+    /// <summary>
+    /// Returns true if the runner is processing messages
+    /// </summary>
     public bool IsProcessing => processing == 0;
 
+    /// <summary>
+    /// Returns true if the actor is shutdown
+    /// </summary>
     public bool IsShutdown => shutdown == 0;
 
     /// <summary>
     /// Constructor
     /// </summary>
+    /// <param name="actorSystem"></param>
     /// <param name="name"></param>
-    public ActorRunner(string name)
+    public ActorRunner(ActorSystem actorSystem, string name)
     {
+        this.actorSystem = actorSystem;
         Name = name;
     }
 
@@ -46,12 +61,13 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     /// Enqueues a message to the actor and tries to deliver it.
     /// </summary>
     /// <param name="message"></param>
-    public void SendAndTryDeliver(TRequest message)
+    /// <param name="sender"></param>
+    public void SendAndTryDeliver(TRequest message, IGenericActorRef? sender)
     {
         if (shutdown == 0)
             return;
 
-        Inbox.Enqueue(message);
+        Inbox.Enqueue(new ActorMessage<TRequest>(message, sender));
 
         if (1 == Interlocked.Exchange(ref processing, 0))
             _ = DeliverMessages();
@@ -75,14 +91,22 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
 
             do
             {
-                while (Inbox.TryDequeue(out TRequest? message))
+                while (Inbox.TryDequeue(out ActorMessage<TRequest> message))
                 {
                     if (shutdown == 0)
                         break;
 
+                    if (ActorContext is not null)
+                    {
+                        if (message.Sender is not null)
+                            ActorContext.Sender = message.Sender;
+                        else
+                            ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+                    }
+
                     try
                     {
-                        await Actor.Receive(message);
+                        await Actor.Receive(message.Request);
                     }
                     catch (Exception ex)
                     {

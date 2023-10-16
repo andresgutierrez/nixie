@@ -1,4 +1,5 @@
 ﻿
+using Nixie.Actors;
 using System.Collections.Concurrent;
 
 namespace Nixie;
@@ -12,10 +13,22 @@ public sealed class ActorSystem : IDisposable
 
     private readonly ConcurrentDictionary<Type, Lazy<IActorRepositoryRunnable>> repositories = new();
 
+    private readonly IActorRef<NobodyActor, object> nobody;
+
+    /// <summary>
+    /// Returns the reference to the nobody actor. This actor is used when a message is sent to an actor that doesn't exist.
+    /// </summary>
+    public IActorRef<NobodyActor, object> Nobody => nobody;
+
     /// <summary>
     /// Returns the actor scheduler
     /// </summary>
     public ActorScheduler Scheduler => scheduler;
+
+    public ActorSystem()
+    {
+        nobody = Spawn<NobodyActor, object>();
+    }
 
     /// <summary>
     /// Creates a new request/response actor and returns a typed reference.
@@ -31,7 +44,7 @@ public sealed class ActorSystem : IDisposable
         ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
 
         return repository.Spawn(name, args);
-    }    
+    }
 
     /// <summary>
     /// Creates a new fire-n-forget actor and returns a typed reference.
@@ -147,7 +160,7 @@ public sealed class ActorSystem : IDisposable
     /// <returns></returns>
     public ActorRepository<TActor, TRequest, TResponse> GetRepository<TActor, TRequest, TResponse>()
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
-    {        
+    {
         Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
             typeof(TActor),
             (type) => new Lazy<IActorRepositoryRunnable>(() => CreateRepository<TActor, TRequest, TResponse>())
@@ -171,7 +184,7 @@ public sealed class ActorSystem : IDisposable
     /// <returns></returns>
     public ActorRepository<TActor, TRequest> GetRepository<TActor, TRequest>()
         where TActor : IActor<TRequest> where TRequest : class
-    {        
+    {
         Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
             typeof(TActor),
             (type) => new Lazy<IActorRepositoryRunnable>(() => CreateRepository<TActor, TRequest>())
@@ -274,6 +287,31 @@ public sealed class ActorSystem : IDisposable
     }
 
     /// <summary>
+    /// Stops all timers running or scheduled for the specified actor.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    public void StopAllTimers<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        scheduler.StopAllTimers(actorRef);
+    }
+
+    /// <summary>
+    /// Stops all timers running or scheduled for the specified actor.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    public void StopAllTimers<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        scheduler.StopAllTimers(actorRef);
+    }
+
+    /// <summary>
     /// Waits for all the actors in the system to finish processing their messages.
     /// </summary>
     /// <returns></returns>
@@ -284,7 +322,7 @@ public sealed class ActorSystem : IDisposable
             bool completed = true;
 
             foreach (KeyValuePair<Type, Lazy<IActorRepositoryRunnable>> repository in repositories)
-            {                
+            {
                 Lazy<IActorRepositoryRunnable> lazyRepository = repository.Value;
 
                 if (!lazyRepository.IsValueCreated)

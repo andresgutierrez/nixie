@@ -11,6 +11,8 @@ namespace Nixie;
 /// <typeparam name="TResponse"></typeparam>
 public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
 {
+    private readonly ActorSystem actorSystem;
+
     private int processing = 1;
 
     private int shutdown = 1;
@@ -31,6 +33,11 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     public IActor<TRequest, TResponse>? Actor { get; set; }
 
     /// <summary>
+    /// Reference to the current actor context
+    /// </summary>
+    public ActorContext<TActor, TRequest, TResponse>? ActorContext { get; set; }
+
+    /// <summary>
     /// True if the actor is processing a message.
     /// </summary>
     public bool IsProcessing => processing == 0;
@@ -43,10 +50,11 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// <summary>
     /// Constructor
     /// </summary>
+    /// <param name="actorSystem"></param>
     /// <param name="name"></param>
-    /// <param name="actor"></param>
-    public ActorRunner(string name)
+    public ActorRunner(ActorSystem actorSystem, string name)
     {
+        this.actorSystem = actorSystem;
         Name = name;
     }
 
@@ -54,10 +62,11 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// Enqueues a message to the actor and tries to deliver it.
     /// </summary>
     /// <param name="message"></param>
+    /// <param name="sender"></param>    
     /// <returns></returns>
-    public ActorMessageReply<TRequest, TResponse> SendAndTryDeliver(TRequest message)
+    public ActorMessageReply<TRequest, TResponse> SendAndTryDeliver(TRequest message, IGenericActorRef? sender)
     {
-        ActorMessageReply<TRequest, TResponse> messageReply = new(message);
+        ActorMessageReply<TRequest, TResponse> messageReply = new(message, sender);
 
         if (shutdown == 0)
             return messageReply;
@@ -88,18 +97,26 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
 
             do
             {
-                while (Inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? messageReply))
+                while (Inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
                 {
                     if (shutdown == 0)
                         break;
 
+                    if (ActorContext is not null)
+                    {
+                        if (message.Sender is not null)
+                            ActorContext.Sender = message.Sender;
+                        else
+                            ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+                    }
+
                     try
                     {
-                        messageReply.SetCompleted(await Actor.Receive(messageReply.Request));
+                        message.SetCompleted(await Actor.Receive(message.Request));
                     }
                     catch (Exception ex)
                     {
-                        messageReply.SetCompleted(null);
+                        message.SetCompleted(null);
 
                         Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
                     }

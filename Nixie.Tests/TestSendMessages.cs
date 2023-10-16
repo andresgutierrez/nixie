@@ -3,7 +3,7 @@ using Nixie.Tests.Actors;
 
 namespace Nixie.Tests;
 
-public class TestSend
+public class TestSendMessages
 {
     [Fact]
     public async Task TestSendMessageToSingleActor()

@@ -21,9 +21,24 @@ public interface IActorRef<TActor, TRequest, TResponse> where TActor : IActor<TR
     public void Send(TRequest message);
 
     /// <summary>
+    /// Sends a message to the actor without expecting response
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="message"></param>
+    public void Send(TRequest message, IGenericActorRef sender);
+
+    /// <summary>
     /// Sends a message to the actor and expects a response
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
     public Task<TResponse?> Ask(TRequest message);
+
+    /// <summary>
+    /// Sends a message to the actor and expects a response
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="sender"></param>
+    /// <returns></returns>
+    public Task<TResponse?> Ask(TRequest message, IGenericActorRef sender);
 }

@@ -16,6 +16,11 @@ public sealed record ActorMessageReply<TRequest, TResponse>
     public TRequest Request { get; }
 
     /// <summary>
+    /// The sender of the message
+    /// </summary>
+    public IGenericActorRef? Sender { get; }
+
+    /// <summary>
     /// Returns the response of the message.
     /// </summary>
     public TResponse? Response { get; private set; }
@@ -29,9 +34,10 @@ public sealed record ActorMessageReply<TRequest, TResponse>
     /// Constructor
     /// </summary>
     /// <param name="request"></param>
-    public ActorMessageReply(TRequest request)
+    public ActorMessageReply(TRequest request, IGenericActorRef? sender)
     {
         Request = request;
+        Sender = sender;
     }
 
     /// <summary>

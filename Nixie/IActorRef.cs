@@ -18,4 +18,10 @@ public interface IActorRef<TActor, TRequest> where TActor : IActor<TRequest> whe
     /// </summary>
     /// <param name="message"></param>
     public void Send(TRequest message);
+
+    /// <summary>
+    /// Sends a message to the actor
+    /// </summary>
+    /// <param name="message"></param>
+    public void Send(TRequest message, IGenericActorRef sender);
 }

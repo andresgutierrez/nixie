@@ -9,7 +9,7 @@ public sealed class ActorContext<TActor, TRequest, TResponse> : IActorContext<TA
 {
     private readonly ActorSystem actorSystem;
 
-    private readonly IActorRef<TActor, TRequest, TResponse> self;
+    private readonly ActorRef<TActor, TRequest, TResponse> self;
 
     /// <summary>
     /// Returns the actor system
@@ -19,13 +19,18 @@ public sealed class ActorContext<TActor, TRequest, TResponse> : IActorContext<TA
     /// <summary>
     /// Returns the actor system
     /// </summary>
-    public IActorRef<TActor, TRequest, TResponse> Self => self;
+    public ActorRef<TActor, TRequest, TResponse> Self => self;
+
+    /// <summary>
+    /// Returns a reference to the sender of the message
+    /// </summary>
+    public IGenericActorRef? Sender { get; set; }
 
     /// <summary>
     /// Creates a new actor context.
     /// </summary>
     /// <param name="actorSystem"></param>
-    public ActorContext(ActorSystem actorSystem, IActorRef<TActor, TRequest, TResponse> self)
+    public ActorContext(ActorSystem actorSystem, ActorRef<TActor, TRequest, TResponse> self)
     {
         this.actorSystem = actorSystem;
         this.self = self;

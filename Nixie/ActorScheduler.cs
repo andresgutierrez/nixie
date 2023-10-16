@@ -8,9 +8,9 @@ namespace Nixie;
 /// </summary>
 public class ActorScheduler : IDisposable
 {
-    private readonly ConcurrentDictionary<object, Lazy<ConcurrentDictionary<string, Lazy<Timer>>>> periodicTimers = new();
-
     private readonly ConcurrentDictionary<object, Lazy<ConcurrentBag<Timer>>> onceTimers = new();
+
+    private readonly ConcurrentDictionary<object, Lazy<ConcurrentDictionary<string, Lazy<Timer>>>> periodicTimers = new();
 
     /// <summary>
     /// Schedules a message to be sent to an actor once after a specified delay at a specified interval.
@@ -132,6 +132,31 @@ public class ActorScheduler : IDisposable
         }
     }
 
+    /// <summary>
+    /// Stops all timers running in an actor
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    public void StopAllTimers<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        StopAllTimersInternal(actorRef);
+    }
+
+    /// <summary>
+    /// Stops all timers running in an actor
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    public void StopAllTimers<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        StopAllTimersInternal(actorRef);
+    }
+
     private Timer AddPeriodicTimerInternal<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request, TimeSpan initialDelay, TimeSpan interval)
         where TActor : IActor<TRequest> where TRequest : class
     {
@@ -166,6 +191,31 @@ public class ActorScheduler : IDisposable
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
         actorRef.Send(request);
+    }
+
+    private void StopAllTimersInternal(object actorRef)
+    {
+        if (periodicTimers.TryGetValue(actorRef, out Lazy<ConcurrentDictionary<string, Lazy<Timer>>>? actorPeriodicTimers))
+        {
+            periodicTimers.TryRemove(actorRef, out _);
+
+            foreach (KeyValuePair<string, Lazy<Timer>> periodicTimer in actorPeriodicTimers.Value)
+            {
+                if (periodicTimer.Value.IsValueCreated)
+                    periodicTimer.Value.Value?.Dispose();
+            }
+        }
+
+        if (onceTimers.TryGetValue(actorRef, out Lazy<ConcurrentBag<Timer>>? actorOnceTimers))
+        {
+            onceTimers.TryRemove(actorRef, out _);
+
+            if (!actorOnceTimers.IsValueCreated)
+                return;
+
+            foreach (Timer onceTimer in actorOnceTimers.Value)
+                onceTimer?.Dispose();
+        }
     }
 
     public void Dispose()
