@@ -10,7 +10,7 @@ public sealed class ActorSystem : IDisposable
 {
     private readonly ActorScheduler scheduler = new();
 
-    private readonly ConcurrentDictionary<Type, IActorRepositoryRunnable> repositories = new();
+    private readonly ConcurrentDictionary<Type, Lazy<IActorRepositoryRunnable>> repositories = new();
 
     /// <summary>
     /// Returns the actor scheduler
@@ -147,15 +147,20 @@ public sealed class ActorSystem : IDisposable
     /// <returns></returns>
     public ActorRepository<TActor, TRequest, TResponse> GetRepository<TActor, TRequest, TResponse>()
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
-    {
-        if (!repositories.TryGetValue(typeof(TActor), out IActorRepositoryRunnable? unitOfWorker))
-        {
-            ActorRepository<TActor, TRequest, TResponse> newUnitOfWork = new(this);
-            repositories.TryAdd(typeof(TActor), newUnitOfWork);
-            return newUnitOfWork;
-        }
+    {        
+        Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
+            typeof(TActor),
+            (type) => new Lazy<IActorRepositoryRunnable>(() => CreateRepository<TActor, TRequest, TResponse>())
+        );
 
-        return (ActorRepository<TActor, TRequest, TResponse>)unitOfWorker;
+        return (ActorRepository<TActor, TRequest, TResponse>)repository.Value;
+    }
+
+    private ActorRepository<TActor, TRequest, TResponse> CreateRepository<TActor, TRequest, TResponse>()
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        ActorRepository<TActor, TRequest, TResponse> repository = new(this);
+        return repository;
     }
 
     /// <summary>
@@ -166,15 +171,20 @@ public sealed class ActorSystem : IDisposable
     /// <returns></returns>
     public ActorRepository<TActor, TRequest> GetRepository<TActor, TRequest>()
         where TActor : IActor<TRequest> where TRequest : class
-    {
-        if (!repositories.TryGetValue(typeof(TActor), out IActorRepositoryRunnable? unitOfWorker))
-        {
-            ActorRepository<TActor, TRequest> newUnitOfWork = new(this);
-            repositories.TryAdd(typeof(TActor), newUnitOfWork);
-            return newUnitOfWork;
-        }
+    {        
+        Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
+            typeof(TActor),
+            (type) => new Lazy<IActorRepositoryRunnable>(() => CreateRepository<TActor, TRequest>())
+        );
 
-        return (ActorRepository<TActor, TRequest>)unitOfWorker;
+        return (ActorRepository<TActor, TRequest>)repository.Value;
+    }
+
+    private ActorRepository<TActor, TRequest> CreateRepository<TActor, TRequest>()
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        ActorRepository<TActor, TRequest> repository = new(this);
+        return repository;
     }
 
     /// <summary>
@@ -273,11 +283,14 @@ public sealed class ActorSystem : IDisposable
         {
             bool completed = true;
 
-            foreach (KeyValuePair<Type, IActorRepositoryRunnable> repository in repositories)
-            {
-                //Console.WriteLine("{0} HP={1} IsP={2}", x.Key, x.Value.HasPendingMessages(), x.Value.IsProcessing());
+            foreach (KeyValuePair<Type, Lazy<IActorRepositoryRunnable>> repository in repositories)
+            {                
+                Lazy<IActorRepositoryRunnable> lazyRepository = repository.Value;
 
-                if (repository.Value.HasPendingMessages() || repository.Value.IsProcessing())
+                if (!lazyRepository.IsValueCreated)
+                    continue;
+
+                if (lazyRepository.Value.HasPendingMessages() || lazyRepository.Value.IsProcessing())
                 {
                     await Task.Yield();
                     completed = false;

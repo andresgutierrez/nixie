@@ -18,7 +18,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// <summary>
     /// The name/id of the actor.
     /// </summary>
-    public string Name { get; }    
+    public string Name { get; }
 
     /// <summary>
     /// The inbox of the actor.
@@ -56,7 +56,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// <param name="message"></param>
     /// <returns></returns>
     public ActorMessageReply<TRequest, TResponse> SendAndTryDeliver(TRequest message)
-    {        
+    {
         ActorMessageReply<TRequest, TResponse> messageReply = new(message);
 
         if (shutdown == 0)
@@ -106,6 +106,6 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
                     Console.WriteLine("{0}\n{1}", ex.Message, ex.StackTrace);
                 }
             }
-        } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
+        } while (shutdown == 1 && (Interlocked.CompareExchange(ref processing, 1, 0) != 0));
     }
 }

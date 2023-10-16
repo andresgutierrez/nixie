@@ -5,17 +5,21 @@ public sealed class PongActor : IActor<string, string>
 {
     public PongActor(IActorContext<PongActor, string, string> _)
     {
-        
+
     }
 
-    public Task<string> Receive(string message)
+    public async Task<string> Receive(string message)
     {
-        return Task.FromResult(message);
+        await Task.Yield();
+
+        return message;
+
+        //return Task.FromResult(message);
     }
 }
 
 public sealed class PingActor : IActor<string, string>
-{    
+{
     private readonly IActorRef<PongActor, string, string> pongRef;
 
     private int receivedMessages;
@@ -31,8 +35,8 @@ public sealed class PingActor : IActor<string, string>
     }
 
     public void IncrMessage()
-    {        
-       receivedMessages++;
+    {
+        receivedMessages++;
     }
 
     public async Task<string> Receive(string message)

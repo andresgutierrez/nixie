@@ -8,6 +8,8 @@ namespace Nixie;
 /// <typeparam name="TResponse"></typeparam>
 public sealed record ActorMessageReply<TRequest, TResponse>
 {
+    private int completed = 1;
+
     /// <summary>
     /// Returns the request of the message.
     /// </summary>
@@ -21,7 +23,7 @@ public sealed record ActorMessageReply<TRequest, TResponse>
     /// <summary>
     /// Returns true if the response has been set.
     /// </summary>
-    public bool IsCompleted { get; private set; }
+    public bool IsCompleted => completed == 0;
 
     /// <summary>
     /// Constructor
@@ -39,7 +41,7 @@ public sealed record ActorMessageReply<TRequest, TResponse>
     public void SetCompleted(TResponse? response)
     {
         Response = response;
-        IsCompleted = true;
+        Interlocked.Exchange(ref completed, 0);
     }
 }
 
