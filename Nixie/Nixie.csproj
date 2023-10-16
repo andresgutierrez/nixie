@@ -9,7 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Nixie</PackageId>
-    <Version>0.0.3-alpha</Version>
+    <Version>0.0.4-alpha</Version>
     <Description>A Lightweight Actor Model Implementation for C#/.NET</Description>
     <Authors>Andres Gutierrez</Authors>
     <Company>Andres Gutierrez</Company>    
@@ -27,6 +27,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Routers\" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="../README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
@@ -38,4 +41,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Routers\" />
+  </ItemGroup>
 </Project>

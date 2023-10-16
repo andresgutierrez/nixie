@@ -10,7 +10,7 @@ public sealed class PongActor : IActor<string, string>
 
     public async Task<string> Receive(string message)
     {
-        await Task.Yield();
+        await Task.Delay(1);
 
         return message;
 

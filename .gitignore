@@ -4,3 +4,4 @@ Nixie/.vs
 Nixie.Tests/bin
 Nixie.Tests/obj
 .vs/
+.DS_Store
