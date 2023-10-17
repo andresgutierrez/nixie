@@ -50,4 +50,13 @@ public interface IActorRef<TActor, TRequest, TResponse> where TActor : IActor<TR
     /// <param name="sender"></param>
     /// <returns></returns>
     public Task<TResponse?> Ask(TRequest message, IGenericActorRef sender);
+
+    /// <summary>
+    /// Sends a message to the actor and expects a response
+    /// An exception will be thrown if the timeout limit is reached
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="sender"></param>
+    /// <returns></returns>
+    public Task<TResponse?> Ask(TRequest message, IGenericActorRef sender, TimeSpan timeout);
 }

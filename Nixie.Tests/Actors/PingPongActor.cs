@@ -8,13 +8,9 @@ public sealed class PongActor : IActor<string, string>
 
     }
 
-    public async Task<string> Receive(string message)
-    {
-        await Task.Delay(1);
-
-        return message;
-
-        //return Task.FromResult(message);
+    public Task<string> Receive(string message)
+    {        
+        return Task.FromResult(message);
     }
 }
 

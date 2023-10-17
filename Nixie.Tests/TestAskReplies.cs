@@ -22,6 +22,20 @@ public class TestAskReplies
     }
 
     [Fact]
+    public async Task TestAskMessageToSingleActorWithTimeout()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<ReplyActor, string, string> actor = asx.Spawn<ReplyActor, string, string>();
+
+        string? reply = await actor.Ask("TestSendMessageToSingleActor", TimeSpan.FromSeconds(5));
+        Assert.NotNull(reply);
+        Assert.Equal("TestSendMessageToSingleActor", reply);
+
+        Assert.Equal(1, ((ReplyActor)actor.Runner.Actor!).GetMessages("TestSendMessageToSingleActor"));
+    }
+
+    [Fact]
     public async Task TestCreateMultipleActorsAndAskOneMessage()
     {
         using ActorSystem asx = new();
@@ -34,6 +48,29 @@ public class TestAskReplies
         for (int i = 0; i < 10; i++)
         {
             string? response = await actorRefs[i].Ask("TestCreateMultipleActorsAndAskOneMessage");
+            Assert.NotNull(response);
+            Assert.Equal("TestCreateMultipleActorsAndAskOneMessage", response);
+        }
+
+        await asx.Wait();
+
+        for (int i = 0; i < 10; i++)
+            Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor!).GetMessages("TestCreateMultipleActorsAndAskOneMessage"));
+    }
+
+    [Fact]
+    public async Task TestCreateMultipleActorsAndAskOneMessageWithTimeout()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<ReplyActor, string, string>[] actorRefs = new IActorRef<ReplyActor, string, string>[10];
+
+        for (int i = 0; i < 10; i++)
+            actorRefs[i] = asx.Spawn<ReplyActor, string, string>();
+
+        for (int i = 0; i < 10; i++)
+        {
+            string? response = await actorRefs[i].Ask("TestCreateMultipleActorsAndAskOneMessage", TimeSpan.FromSeconds(5));
             Assert.NotNull(response);
             Assert.Equal("TestCreateMultipleActorsAndAskOneMessage", response);
         }
@@ -186,5 +223,53 @@ public class TestAskReplies
 
         for (int i = 0; i < 100; i++)
             Assert.Equal(50, ((PingActor)actorRefs[i].Runner.Actor!).GetMessages());
+    }
+
+    [Fact]
+    public async Task TestAskMessageToSlowActor()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<ReplySlowActor, string, string> actor = asx.Spawn<ReplySlowActor, string, string>();
+
+        string? reply = await actor.Ask("TestAskMessageToSlowActor");
+        Assert.NotNull(reply);
+        Assert.Equal("TestAskMessageToSlowActor", reply);
+
+        Assert.Equal(1, ((ReplySlowActor)actor.Runner.Actor!).GetMessages("TestAskMessageToSlowActor"));
+    }
+
+    [Fact]
+    public async Task TestAskMessageToSlowActorWithTimeout()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<ReplySlowActor, string, string> actor = asx.Spawn<ReplySlowActor, string, string>();
+
+        string? reply = await actor.Ask("TestAskMessageToSlowActorWithTimeout", TimeSpan.FromSeconds(5));
+        Assert.NotNull(reply);
+        Assert.Equal("TestAskMessageToSlowActorWithTimeout", reply);
+
+        Assert.Equal(1, ((ReplySlowActor)actor.Runner.Actor!).GetMessages("TestAskMessageToSlowActorWithTimeout"));
+    }
+
+    [Fact]
+    public async Task TestAskMessageToSlowActorTriggerTimeout()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<ReplySlowActor, string, string> actor = asx.Spawn<ReplySlowActor, string, string>();
+
+        AskTimeoutException exception = await Assert.ThrowsAsync<AskTimeoutException>(async () => await TriggerTimeout(actor));
+        Assert.Equal("Timeout after 00:00:01 waiting for a reply", exception.Message);
+
+        await asx.Wait();
+
+        Assert.Equal(1, ((ReplySlowActor)actor.Runner.Actor!).GetMessages("TestAskMessageToSlowActorTriggerTimeout"));
+    }
+
+    private async Task TriggerTimeout(IActorRef<ReplySlowActor, string, string> actor)
+    {
+        await actor.Ask("TestAskMessageToSlowActorTriggerTimeout", TimeSpan.FromSeconds(1));        
     }
 }

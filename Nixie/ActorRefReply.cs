@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics;
+
 namespace Nixie;
 
 /// <summary>
@@ -68,11 +70,18 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <param name="timeout"></param>
     /// <returns></returns>
     public async Task<TResponse?> Ask(TRequest message, TimeSpan timeout)
-    {
+    {        
         ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null);
 
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
         while (!promise.IsCompleted)
+        {
+            if (stopwatch.Elapsed >= timeout)
+                throw new AskTimeoutException($"Timeout after {timeout} waiting for a reply");
+
             await Task.Yield();
+        }
 
         return promise.Response;
     }
@@ -105,8 +114,15 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     {
         ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender);
 
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
         while (!promise.IsCompleted)
+        {
+            if (stopwatch.Elapsed >= timeout)
+                throw new AskTimeoutException($"Timeout after {timeout} waiting for a reply");
+
             await Task.Yield();
+        }
 
         return promise.Response;
     }

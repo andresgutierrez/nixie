@@ -46,8 +46,8 @@ public sealed record ActorMessageReply<TRequest, TResponse>
     /// <param name="response"></param>
     public void SetCompleted(TResponse? response)
     {
-        Response = response;
         Interlocked.Exchange(ref completed, 0);
+        Response = response;
     }
 }
 
