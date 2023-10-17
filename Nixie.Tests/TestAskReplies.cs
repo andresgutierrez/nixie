@@ -95,7 +95,7 @@ public class TestAskReplies
         {
             string expected = "TestCreateMultipleActorsAndAskOneMessage2" + i;
 
-            string? response = await actorRefs[i].Ask(expected);
+            string? response = await actorRefs[i].Ask(expected, TimeSpan.FromSeconds(2));
             Assert.NotNull(response);
             Assert.Equal(expected, response);
         }
@@ -110,7 +110,7 @@ public class TestAskReplies
 
         IActorRef<PingActor, string, string> actor = asx.Spawn<PingActor, string, string>();
 
-        string? reply = await actor.Ask("TestAskPingPong");
+        string? reply = await actor.Ask("TestAskPingPong", TimeSpan.FromSeconds(2));
         Assert.NotNull(reply);
         Assert.Equal("TestAskPingPong", reply);
 
@@ -133,7 +133,7 @@ public class TestAskReplies
         {
             string expected = "TestAskPingPong" + i;
 
-            string? response = await actorRefs[i].Ask(expected);
+            string? response = await actorRefs[i].Ask(expected, TimeSpan.FromSeconds(2));
             Assert.NotNull(response);
             Assert.Equal(expected, response);
         }
@@ -148,7 +148,7 @@ public class TestAskReplies
     {
         string expected = "TestAskPingPong" + i;
 
-        string? response = await pingRef.Ask(expected);
+        string? response = await pingRef.Ask(expected, TimeSpan.FromSeconds(2));
         Assert.NotNull(response);
         Assert.Equal(expected, response);
     }

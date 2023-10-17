@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [ main ]
 jobs:  
-  Backend-Tests:
+  Nixie-Tests:
     runs-on: ubuntu-latest
     env:      
       GIT_BRANCH: ${{ github.head_ref || github.ref_name }}

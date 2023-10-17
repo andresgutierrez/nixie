@@ -39,7 +39,7 @@ public sealed class PingActor : IActor<string, string>
     {
         IncrMessage();
 
-        string? pongReply = await pongRef.Ask(message);
+        string? pongReply = await pongRef.Ask(message, TimeSpan.FromSeconds(2));
 
         return pongReply ?? "";
     }

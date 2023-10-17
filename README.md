@@ -1,6 +1,6 @@
 # Nixie
 
-A Lightweight Actor Model Implementation for C#/.NET
+A Lightweight Actor Model Implementation for C#/.NET [![Run Tests](https://github.com/andresgutierrez/nixie/actions/workflows/run-tests.yml/badge.svg)](https://github.com/andresgutierrez/nixie/actions/workflows/run-tests.yml)
 
 ## Overview
 

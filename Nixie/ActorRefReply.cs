@@ -41,7 +41,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// Passes a message to the actor without expecting a response and specifying a sender
     /// </summary>
     /// <param name="message"></param>
-    /// <param name="sender"></param>    
+    /// <param name="sender"></param>
     public void Send(TRequest message, IGenericActorRef sender)
     {
         runner.SendAndTryDeliver(message, sender, null);
@@ -61,7 +61,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// Sends a message to actor expecting a response and without specifying a sender
     /// </summary>
     /// <param name="message"></param>
-    /// <returns></returns>
+    /// <returns></returns>    
     public async Task<TResponse?> Ask(TRequest message)
     {
         ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null, null);
@@ -79,6 +79,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <param name="message"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
+    /// <exception cref="AskTimeoutException"></exception>
     public async Task<TResponse?> Ask(TRequest message, TimeSpan timeout)
     {        
         ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null, null);
@@ -120,6 +121,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <param name="sender"></param>
     /// <param name="timeout"></param>
     /// <returns></returns>
+    /// <exception cref="AskTimeoutException"></exception>
     public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender, TimeSpan timeout)
     {
         ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender, null);

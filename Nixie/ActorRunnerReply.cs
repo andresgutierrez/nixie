@@ -125,7 +125,8 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
                     else
                         ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
 
-                    ActorContext.Reply = message;                    
+                    ActorContext.Reply = message;
+                    ActorContext.ByPassReply = false;
 
                     try
                     {
