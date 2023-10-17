@@ -8,9 +8,9 @@ public sealed class PongActor : IActor<string, string>
 
     }
 
-    public Task<string> Receive(string message)
+    public Task<string?> Receive(string message)
     {        
-        return Task.FromResult(message);
+        return Task.FromResult<string?>(message);
     }
 }
 
@@ -35,7 +35,7 @@ public sealed class PingActor : IActor<string, string>
         receivedMessages++;
     }
 
-    public async Task<string> Receive(string message)
+    public async Task<string?> Receive(string message)
     {
         IncrMessage();
 

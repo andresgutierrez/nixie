@@ -9,7 +9,8 @@ namespace Nixie;
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
-public interface IActorContext<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+public interface IActorContext<TActor, TRequest, TResponse> 
+    where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     /// <summary>
     /// Returns a reference to the actor system
@@ -30,4 +31,15 @@ public interface IActorContext<TActor, TRequest, TResponse> where TActor : IActo
     /// Returns a reference to the sender of the message
     /// </summary>
     public IGenericActorRef? Sender { get; set; }
+
+    /// <summary>
+    /// Returns a reference to the current reply object
+    /// </summary>
+    public ActorMessageReply<TRequest, TResponse>? Reply { get; set; }
+
+    /// <summary>
+    /// Indicates if the response of the current invocation must be by passed
+    /// to allow other consumer to set the response
+    /// </summary>
+    public bool ByPassReply { get; set; }
 }

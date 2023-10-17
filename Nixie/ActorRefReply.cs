@@ -10,7 +10,7 @@ namespace Nixie;
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
 public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IActorRef<TActor, TRequest, TResponse>
-    where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     private readonly ActorRunner<TActor, TRequest, TResponse> runner;
 
@@ -34,7 +34,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <param name="message"></param>
     public void Send(TRequest message)
     {
-        runner.SendAndTryDeliver(message, null);
+        runner.SendAndTryDeliver(message, null, null);
     }
 
     /// <summary>
@@ -44,7 +44,17 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <param name="sender"></param>    
     public void Send(TRequest message, IGenericActorRef sender)
     {
-        runner.SendAndTryDeliver(message, sender);
+        runner.SendAndTryDeliver(message, sender, null);
+    }
+
+    /// <summary>
+    /// Passes a message to the actor without expecting a response and specifying a parent promise
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="parentPromise"></param>
+    public void Send(TRequest message, ActorMessageReply<TRequest, TResponse>? parentPromise)
+    {
+        runner.SendAndTryDeliver(message, null, parentPromise);
     }
 
     /// <summary>
@@ -54,7 +64,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <returns></returns>
     public async Task<TResponse?> Ask(TRequest message)
     {
-        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null);
+        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null, null);
 
         while (!promise.IsCompleted)
             await Task.Yield();
@@ -71,7 +81,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <returns></returns>
     public async Task<TResponse?> Ask(TRequest message, TimeSpan timeout)
     {        
-        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null);
+        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null, null);
 
         Stopwatch stopwatch = Stopwatch.StartNew();
 
@@ -94,7 +104,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <returns></returns>
     public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender)
     {
-        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender);
+        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender, null);
 
         while (!promise.IsCompleted)
             await Task.Yield();
@@ -112,7 +122,7 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <returns></returns>
     public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender, TimeSpan timeout)
     {
-        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender);
+        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender, null);
 
         Stopwatch stopwatch = Stopwatch.StartNew();
 

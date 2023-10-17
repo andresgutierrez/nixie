@@ -55,7 +55,7 @@ public class ActorScheduler : IDisposable
     /// <returns></returns>
     /// <exception cref="NixieException"></exception>
     public Timer StartPeriodicTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, string name, TRequest request, TimeSpan initialDelay, TimeSpan interval)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         if (periodicTimers.ContainsKey(name))
             throw new NixieException("There is already an active timer with this name.");
@@ -76,7 +76,7 @@ public class ActorScheduler : IDisposable
     /// <param name="delay"></param>
     /// <returns></returns>
     public ConcurrentBag<Timer> ScheduleOnce<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan delay)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         Lazy<ConcurrentBag<Timer>> timers = onceTimers.GetOrAdd(actorRef, (object actorRef) => new Lazy<ConcurrentBag<Timer>>());
         timers.Value.Add(ScheduleOnceTimer(actorRef, request, delay));
@@ -126,7 +126,7 @@ public class ActorScheduler : IDisposable
     /// <param name="name"></param>
     /// <exception cref="NixieException"></exception>
     public void StopPeriodicTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, string name)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         if (periodicTimers.TryGetValue(actorRef, out Lazy<ConcurrentDictionary<string, Lazy<Timer>>>? timers))
         {
@@ -148,7 +148,7 @@ public class ActorScheduler : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="actorRef"></param>
     public void StopAllTimers<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         StopAllTimersInternal(actorRef);
     }
@@ -172,7 +172,7 @@ public class ActorScheduler : IDisposable
     }
 
     private Timer AddPeriodicTimerInternal<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan initialDelay, TimeSpan interval)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         return new((state) => SendScheduledMessage(actorRef, request), null, initialDelay, interval);
     }
@@ -184,7 +184,7 @@ public class ActorScheduler : IDisposable
     }
 
     private Timer ScheduleOnceTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan delay)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         return new((state) => SendScheduledMessage(actorRef, request), null, delay, TimeSpan.Zero);
     }
@@ -203,7 +203,7 @@ public class ActorScheduler : IDisposable
     }
 
     private void SendScheduledMessage<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         try
         {

@@ -26,10 +26,10 @@ public sealed class ReplyActor : IActor<string, string>
             receivedMessages[id]++;
     }
 
-    public Task<string> Receive(string message)
+    public Task<string?> Receive(string message)
     {
         IncrMessage(message);
 
-        return Task.FromResult(message);
+        return Task.FromResult<string?>(message);
     }
 }

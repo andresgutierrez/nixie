@@ -8,7 +8,7 @@ namespace Nixie;
 /// <typeparam name="TResponse"></typeparam>
 public sealed record ActorMessageReply<TRequest, TResponse>
 {
-    private int completed = 1;
+    private volatile int completed = 1;
 
     /// <summary>
     /// Returns the request of the message.

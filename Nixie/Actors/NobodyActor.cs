@@ -11,8 +11,8 @@ public sealed class NobodyActor : IActor<object>
 
     }
 
-    public async Task Receive(object message)
+    public Task Receive(object message)
     {
-        await Task.Yield(); // Discard all messages
+        return Task.CompletedTask; // Discard all messages
     }
 }

@@ -26,7 +26,7 @@ public sealed class ReplySlowActor : IActor<string, string>
             receivedMessages[id]++;
     }
 
-    public async Task<string> Receive(string message)
+    public async Task<string?> Receive(string message)
     {
         IncrMessage(message);
 

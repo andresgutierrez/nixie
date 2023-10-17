@@ -47,11 +47,11 @@ public class ConsistentHashActor<TActor, TRequest> : IActor<TRequest>
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
-    public async Task Receive(TRequest message)
-    {
-        await Task.Yield();
-
+    public Task Receive(TRequest message)
+    {        
         IActorRef<TActor, TRequest> instance = instances[message.GetHash() % instances.Count];
         instance.Send(message);
+
+        return Task.CompletedTask;
     }
 }

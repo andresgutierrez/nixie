@@ -22,20 +22,15 @@ public sealed class RouterMessage : IConsistentHashable
 
     public int GetHash()
     {
-        ulong hash = 14695981039346656037;
-
-        ReadOnlySpan<char> spanBytes = Data.AsSpan();
-
-        for (int i = 0; i < spanBytes.Length; i++)
+        return Data switch
         {
-            unchecked
-            {
-                hash ^= spanBytes[i];
-                hash *= 0x100000001b3;
-            }
-        }
-
-        return Math.Abs((int)hash);
+            "aaa" => 0,
+            "bbb" => 1,
+            "ccc" => 2,
+            "ddd" => 3,
+            "eee" => 4,
+            _ => 0
+        };
     }
 }
 

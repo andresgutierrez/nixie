@@ -10,7 +10,7 @@ namespace Nixie;
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
-public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     private readonly ActorSystem actorSystem;
 
@@ -66,13 +66,20 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
 
     /// <summary>
     /// Enqueues a message to the actor and tries to deliver it.
+    /// The request/response type actors use an object to assign the response once completed. The "Ask" operations spin until they receive the response.
     /// </summary>
     /// <param name="message"></param>
-    /// <param name="sender"></param>    
+    /// <param name="sender"></param>
+    /// <param name="parentReply"></param>
     /// <returns></returns>
-    public ActorMessageReply<TRequest, TResponse> SendAndTryDeliver(TRequest message, IGenericActorRef? sender)
+    public ActorMessageReply<TRequest, TResponse> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
     {
-        ActorMessageReply<TRequest, TResponse> messageReply = new(message, sender);
+        ActorMessageReply<TRequest, TResponse> messageReply;
+
+        if (parentReply is not null)
+            messageReply = parentReply;
+        else
+            messageReply = new(message, sender);
 
         if (shutdown == 0)
             return messageReply;
@@ -94,31 +101,38 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
         return 1 == Interlocked.Exchange(ref shutdown, 0);
     }
 
+    /// <summary>
+    /// It retrieves a message from the inbox and invokes the actor by passing one message 
+    /// at a time until the pending message list is cleared.
+    /// </summary>
+    /// <returns></returns>
     private async Task DeliverMessages()
     {
         try
         {
-            if (Actor is null || shutdown == 0)
+            if (Actor is null || ActorContext is null || shutdown == 0)
                 return;
 
             do
             {
                 while (Inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
                 {
-                    if (shutdown == 0)
+                    if (shutdown == 0 || ActorContext is null)
                         break;
+                    
+                    if (message.Sender is not null)
+                        ActorContext.Sender = message.Sender;
+                    else
+                        ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
 
-                    if (ActorContext is not null)
-                    {
-                        if (message.Sender is not null)
-                            ActorContext.Sender = message.Sender;
-                        else
-                            ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
-                    }
+                    ActorContext.Reply = message;                    
 
                     try
                     {
-                        message.SetCompleted(await Actor.Receive(message.Request));
+                        TResponse? response = await Actor.Receive(message.Request);
+
+                        if (!ActorContext.ByPassReply)
+                            message.SetCompleted(response);
                     }
                     catch (Exception ex)
                     {

@@ -14,6 +14,7 @@ Nixie is a lightweight, high-performance implementation of the [actor model](htt
 - **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nixie ensures that your actor systems are both scalable and performant.
 - **Less Error Prone:** The strongly-typed nature and nullability checks inherently make your actor system more reliable and resilient.
 - **Built on TPL:** Make the most out of the robust, scalable, and performant asynchronous programming features offered by TPL.
+- **Multi-Threading:** To increase throughput, Nixie makes use of thread-safe structures that avoid locks wherever possible and use fine-grained locking where locks are necessary. Abstracting the complexities of multithreaded programming into an API that is easy to use and understand.
 
 ## Getting Started
 
@@ -29,7 +30,7 @@ To install Nixie into your C#/.NET project, you can use the .NET CLI or the NuGe
 #### Using .NET CLI
 
 ```shell
-dotnet add package Nixie --version 0.0.3-alpha
+dotnet add package Nixie --version 0.0.5-alpha
 ```
 
 ### Using NuGet Package Manager
@@ -37,7 +38,7 @@ dotnet add package Nixie --version 0.0.3-alpha
 Search for Nixie and install it from the NuGet package manager UI, or use the Package Manager Console:
 
 ```shell
-Install-Package Nixie -Version 0.0.3-alpha
+Install-Package Nixie -Version 0.0.5-alpha
 ```
 
 ## Usage
@@ -86,9 +87,14 @@ Nixie is an open-source project, and contributions are heartily welcomed! Whethe
 
 Nixie is released under the MIT License.
 
+## Name origin
+
+[Nixies](https://en.wikipedia.org/wiki/Nixie_(folklore)) are mysterious shapeshifting water spirits in Germanic mythology and folklore. 
+
 ## Acknowledgements
 
 Sincere thanks to all contributors and the C#/.NET community for the continual support and inspiration.
 
+---
 
 Let's build robust and efficient actor systems with Nixie! 🚀

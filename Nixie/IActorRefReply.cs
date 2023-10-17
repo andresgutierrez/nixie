@@ -7,7 +7,7 @@ namespace Nixie;
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
-public interface IActorRef<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+public interface IActorRef<TActor, TRequest, TResponse> where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     /// <summary>
     /// The actor runner.
@@ -26,6 +26,13 @@ public interface IActorRef<TActor, TRequest, TResponse> where TActor : IActor<TR
     /// <param name="message"></param>
     /// <param name="message"></param>
     public void Send(TRequest message, IGenericActorRef sender);
+
+    /// <summary>
+    /// Passes a message to the actor without expecting a response and specifying a parent promise
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="parentPromise"></param>
+    public void Send(TRequest message, ActorMessageReply<TRequest, TResponse>? parentPromise);
 
     /// <summary>
     /// Sends a message to the actor and expects a response
