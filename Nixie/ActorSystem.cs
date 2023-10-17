@@ -54,7 +54,8 @@ public sealed class ActorSystem : IDisposable
     /// <param name="name"></param>
     /// <param name="args"></param>
     /// <returns></returns>
-    public IActorRef<TActor, TRequest, TResponse> Spawn<TActor, TRequest, TResponse>(string? name = null, params object[]? args) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    public IActorRef<TActor, TRequest, TResponse> Spawn<TActor, TRequest, TResponse>(string? name = null, params object[]? args)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
         ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
 
@@ -69,7 +70,8 @@ public sealed class ActorSystem : IDisposable
     /// <param name="name"></param>
     /// <param name="args"></param>
     /// <returns></returns>
-    public IActorRef<TActor, TRequest> Spawn<TActor, TRequest>(string? name = null, params object[]? args) where TActor : IActor<TRequest> where TRequest : class
+    public IActorRef<TActor, TRequest> Spawn<TActor, TRequest>(string? name = null, params object[]? args)
+        where TActor : IActor<TRequest> where TRequest : class
     {
         ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
 
@@ -84,7 +86,8 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
-    public IActorRef<TActor, TRequest, TResponse>? Get<TActor, TRequest, TResponse>(string name) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    public IActorRef<TActor, TRequest, TResponse>? Get<TActor, TRequest, TResponse>(string name)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
         ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
 
@@ -99,7 +102,8 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
-    public IActorRef<TActor, TRequest>? Get<TActor, TRequest>(string name) where TActor : IActor<TRequest> where TRequest : class
+    public IActorRef<TActor, TRequest>? Get<TActor, TRequest>(string name) where TActor : IActor<TRequest>
+        where TRequest : class
     {
         ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
 
@@ -114,7 +118,8 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
-    public bool Shutdown<TActor, TRequest, TResponse>(string name) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    public bool Shutdown<TActor, TRequest, TResponse>(string name) where TActor : IActor<TRequest, TResponse>
+        where TRequest : class where TResponse : class
     {
         ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
 
@@ -129,7 +134,8 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
-    public bool Shutdown<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    public bool Shutdown<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
     {
         ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
 
@@ -144,7 +150,8 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
-    public bool Shutdown<TActor, TRequest>(string name) where TActor : IActor<TRequest> where TRequest : class
+    public bool Shutdown<TActor, TRequest>(string name) where TActor : IActor<TRequest>
+        where TRequest : class
     {
         ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
 
@@ -159,7 +166,8 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
-    public bool Shutdown<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef) where TActor : IActor<TRequest> where TRequest : class
+    public bool Shutdown<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef)
+        where TActor : IActor<TRequest> where TRequest : class
     {
         ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
 

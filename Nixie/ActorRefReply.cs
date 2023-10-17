@@ -61,12 +61,47 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     }
 
     /// <summary>
+    /// Sends a message to the actor and expects a response
+    /// An exception will be thrown if the timeout limit is reached
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="timeout"></param>
+    /// <returns></returns>
+    public async Task<TResponse?> Ask(TRequest message, TimeSpan timeout)
+    {
+        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null);
+
+        while (!promise.IsCompleted)
+            await Task.Yield();
+
+        return promise.Response;
+    }
+
+    /// <summary>
     /// Sends a message to actor expecting a response and specifying the sender
     /// </summary>
     /// <param name="message"></param>
     /// <param name="sender"></param>
     /// <returns></returns>
     public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender)
+    {
+        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender);
+
+        while (!promise.IsCompleted)
+            await Task.Yield();
+
+        return promise.Response;
+    }
+
+    /// <summary>
+    /// Sends a message to actor expecting a response and specifying the sender
+    /// An exception will be thrown if the timeout limit is reached
+    /// </summary>
+    /// <param name="message"></param>
+    /// <param name="sender"></param>
+    /// <param name="timeout"></param>
+    /// <returns></returns>
+    public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender, TimeSpan timeout)
     {
         ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender);
 
