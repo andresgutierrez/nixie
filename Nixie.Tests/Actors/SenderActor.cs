@@ -29,18 +29,18 @@ internal sealed class SenderPongActor : IActor<SenderRequest>
         this.context = context;
     }
 
-    public async Task Receive(SenderRequest message)
-    {
-        await Task.Yield();
-
+    public Task Receive(SenderRequest message)
+    {        
         if (message.Type != SenderRequestType.Broadcast)
-            return;
+            return Task.CompletedTask;
 
         if (context.Sender is IActorRef<SenderActor, SenderRequest> senderActor)
             senderActor.Send(new SenderRequest(SenderRequestType.Pong));
 
         if (context.Sender is IActorRef<NobodyActor, object> nobodyActor)
             nobodyActor.Send(new SenderRequest(SenderRequestType.Pong));
+
+        return Task.CompletedTask;
     }
 }
 
@@ -70,10 +70,8 @@ internal sealed class SenderActor : IActor<SenderRequest>
         receivedMessages++;
     }
 
-    public async Task Receive(SenderRequest message)
-    {
-        await Task.Yield();
-
+    public Task Receive(SenderRequest message)
+    {        
         if (message.Type == SenderRequestType.Broadcast)
         {
             for (int i = 0; i < 10; i++)
@@ -88,5 +86,7 @@ internal sealed class SenderActor : IActor<SenderRequest>
 
         if (message.Type == SenderRequestType.Pong)
             IncrMessage();
+
+        return Task.CompletedTask;
     }
 }

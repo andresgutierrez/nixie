@@ -1,4 +1,5 @@
 ﻿
+using System.Diagnostics;
 using Nixie.Tests.Actors;
 
 namespace Nixie.Tests;
@@ -80,5 +81,26 @@ public class TestSender
         await asx.Wait();
 
         Assert.Equal(100, ((SenderActor)actor.Runner.Actor!).GetMessages());
+    }
+
+    [Fact]
+    public async Task TestSkynet()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<SenderActor, SenderRequest> actor = asx.Spawn<SenderActor, SenderRequest>();
+
+        Stopwatch st = Stopwatch.StartNew();
+
+        SenderRequest request = new(SenderRequestType.Broadcast);
+
+        for (int i = 0; i < 100000; i++)
+            actor.Send(request);
+
+        await asx.Wait();
+
+        Console.WriteLine("Time=", st.ElapsedMilliseconds);
+
+        Assert.Equal(1000000, ((SenderActor)actor.Runner.Actor!).GetMessages());
     }
 }
