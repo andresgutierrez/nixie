@@ -76,7 +76,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     {
         ActorMessageReply<TRequest, TResponse> messageReply;
 
-        TaskCompletionSource<TResponse?> promise = new();
+        TaskCompletionSource<TResponse?> promise = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         if (parentReply is not null)
             messageReply = parentReply;
