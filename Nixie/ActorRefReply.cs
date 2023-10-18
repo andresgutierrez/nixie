@@ -1,6 +1,4 @@
 ﻿
-using System.Diagnostics;
-
 namespace Nixie;
 
 /// <summary>
@@ -64,12 +62,9 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <returns></returns>    
     public async Task<TResponse?> Ask(TRequest message)
     {
-        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null, null);
+        TaskCompletionSource<TResponse?> promise = runner.SendAndTryDeliver(message, null, null);
 
-        while (!promise.IsCompleted)
-            await Task.Yield();
-
-        return promise.Response;
+        return await promise.Task;
     }
 
     /// <summary>
@@ -81,20 +76,25 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <returns></returns>
     /// <exception cref="AskTimeoutException"></exception>
     public async Task<TResponse?> Ask(TRequest message, TimeSpan timeout)
-    {        
-        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, null, null);
+    {
+        using CancellationTokenSource timeoutCancellationTokenSource = new();
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
+        TaskCompletionSource<TResponse?> completionSource = runner.SendAndTryDeliver(message, null, null);
 
-        while (!promise.IsCompleted)
+        Task<TResponse?> task = completionSource.Task;
+
+        Task completedTask = await Task.WhenAny(
+                                    task,
+                                    Task.Delay(timeout, timeoutCancellationTokenSource.Token)
+                                  );
+
+        if (completedTask == task)
         {
-            if (stopwatch.Elapsed >= timeout)
-                throw new AskTimeoutException($"Timeout after {timeout} waiting for a reply");
-
-            await Task.Yield();
+            timeoutCancellationTokenSource.Cancel();
+            return await task;
         }
 
-        return promise.Response;
+        throw new AskTimeoutException($"Timeout after {timeout} waiting for a reply");
     }
 
     /// <summary>
@@ -105,12 +105,9 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <returns></returns>
     public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender)
     {
-        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender, null);
+        TaskCompletionSource<TResponse?> promise = runner.SendAndTryDeliver(message, sender, null);
 
-        while (!promise.IsCompleted)
-            await Task.Yield();
-
-        return promise.Response;
+        return await promise.Task;
     }
 
     /// <summary>
@@ -124,18 +121,23 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <exception cref="AskTimeoutException"></exception>
     public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender, TimeSpan timeout)
     {
-        ActorMessageReply<TRequest, TResponse> promise = runner.SendAndTryDeliver(message, sender, null);
+        using CancellationTokenSource timeoutCancellationTokenSource = new();
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
+        TaskCompletionSource<TResponse?> completionSource = runner.SendAndTryDeliver(message, sender, null);
 
-        while (!promise.IsCompleted)
+        Task<TResponse?> task = completionSource.Task;
+
+        Task completedTask = await Task.WhenAny(
+                                    task,
+                                    Task.Delay(timeout, timeoutCancellationTokenSource.Token)
+                                  );
+
+        if (completedTask == task)
         {
-            if (stopwatch.Elapsed >= timeout)
-                throw new AskTimeoutException($"Timeout after {timeout} waiting for a reply");
-
-            await Task.Yield();
+            timeoutCancellationTokenSource.Cancel();
+            return await task;
         }
 
-        return promise.Response;
+        throw new AskTimeoutException($"Timeout after {timeout} waiting for a reply");
     }
 }

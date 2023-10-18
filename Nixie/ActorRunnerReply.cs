@@ -72,24 +72,29 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// <param name="sender"></param>
     /// <param name="parentReply"></param>
     /// <returns></returns>
-    public ActorMessageReply<TRequest, TResponse> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
+    public TaskCompletionSource<TResponse?> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
     {
         ActorMessageReply<TRequest, TResponse> messageReply;
+
+        TaskCompletionSource<TResponse?> promise = new();
 
         if (parentReply is not null)
             messageReply = parentReply;
         else
-            messageReply = new(message, sender);
+            messageReply = new(message, sender, promise);        
 
         if (shutdown == 0)
-            return messageReply;
+        {
+            promise.SetCanceled();
+            return promise;
+        }
 
         Inbox.Enqueue(messageReply);
 
         if (1 == Interlocked.Exchange(ref processing, 0))
             _ = DeliverMessages();
 
-        return messageReply;
+        return promise;
     }
 
     /// <summary>
@@ -133,11 +138,11 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
                         TResponse? response = await Actor.Receive(message.Request);
 
                         if (!ActorContext.ByPassReply)
-                            message.SetCompleted(response);
+                            message.Promise.SetResult(response);
                     }
                     catch (Exception ex)
                     {
-                        message.SetCompleted(null);
+                        message.Promise.SetResult(null);
 
                         logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
                     }

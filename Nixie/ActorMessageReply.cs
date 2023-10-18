@@ -7,9 +7,7 @@ namespace Nixie;
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
 public sealed record ActorMessageReply<TRequest, TResponse>
-{
-    private volatile int completed = 1;
-
+{    
     /// <summary>
     /// Returns the request of the message.
     /// </summary>
@@ -26,28 +24,20 @@ public sealed record ActorMessageReply<TRequest, TResponse>
     public TResponse? Response { get; private set; }
 
     /// <summary>
-    /// Returns true if the response has been set.
+    /// Returns the task completion source of the reply
     /// </summary>
-    public bool IsCompleted => completed == 0;
+    public TaskCompletionSource<TResponse?> Promise { get; }    
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="request"></param>
-    public ActorMessageReply(TRequest request, IGenericActorRef? sender)
+    /// <param name="sender"></param>
+    /// <param name="promise"></param>
+    public ActorMessageReply(TRequest request, IGenericActorRef? sender, TaskCompletionSource<TResponse?> promise)
     {
         Request = request;
         Sender = sender;
-    }
-
-    /// <summary>
-    /// Marks the reply as completed.
-    /// </summary>
-    /// <param name="response"></param>
-    public void SetCompleted(TResponse? response)
-    {
-        Interlocked.Exchange(ref completed, 0);
-        Response = response;
+        Promise = promise;
     }
 }
-
