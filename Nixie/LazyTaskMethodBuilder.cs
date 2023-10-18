@@ -1,4 +1,6 @@
 ﻿
+#pragma warning disable CA1000
+
 using System.Runtime.CompilerServices;
 
 namespace Nixie;
@@ -7,7 +9,7 @@ public class LazyTaskMethodBuilder<T>
 {
     public LazyTaskMethodBuilder() => Task = new LazyTask<T>();
 
-    //public static LazyTaskMethodBuilder<T> Create() => new();
+    public static LazyTaskMethodBuilder<T> Create() => new();
 
     public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
     {
@@ -42,3 +44,5 @@ public class LazyTaskMethodBuilder<T>
 
     public LazyTask<T> Task { get; }
 }
+
+#pragma warning restore CA1000
