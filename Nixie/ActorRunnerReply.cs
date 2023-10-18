@@ -16,6 +16,8 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
 
     private readonly ILogger? logger;
 
+    private readonly ConcurrentQueue<ActorMessageReply<TRequest, TResponse>> inbox = new();
+
     private int processing = 1;
 
     private int shutdown = 1;
@@ -26,9 +28,14 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     public string Name { get; }
 
     /// <summary>
-    /// The inbox of the actor.
+    /// Returns true if the actor's inbox is empty
     /// </summary>
-    public ConcurrentQueue<ActorMessageReply<TRequest, TResponse>> Inbox { get; } = new();
+    public bool IsEmpty => inbox.IsEmpty;
+
+    /// <summary>
+    /// Returns the number of messages in the inbox
+    /// </summary>
+    public int MessageCount => inbox.Count;
 
     /// <summary>
     /// The reference to the actor.
@@ -66,7 +73,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
 
     /// <summary>
     /// Enqueues a message to the actor and tries to deliver it.
-    /// The request/response type actors use an object to assign the response once completed. The "Ask" operations spin until they receive the response.
+    /// The request/response type actors use an object to assign the response once completed. 
     /// </summary>
     /// <param name="message"></param>
     /// <param name="sender"></param>
@@ -81,7 +88,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
         if (parentReply is not null)
             messageReply = parentReply;
         else
-            messageReply = new(message, sender, promise);        
+            messageReply = new(message, sender, promise);
 
         if (shutdown == 0)
         {
@@ -89,7 +96,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
             return promise;
         }
 
-        Inbox.Enqueue(messageReply);
+        inbox.Enqueue(messageReply);
 
         if (1 == Interlocked.Exchange(ref processing, 0))
             _ = DeliverMessages();
@@ -118,13 +125,15 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
             if (Actor is null || ActorContext is null || shutdown == 0)
                 return;
 
+            ActorContext.Runner = this;
+
             do
             {
-                while (Inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
+                while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
                 {
                     if (shutdown == 0 || ActorContext is null)
                         break;
-                    
+
                     if (message.Sender is not null)
                         ActorContext.Sender = message.Sender;
                     else

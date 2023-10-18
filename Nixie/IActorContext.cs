@@ -29,4 +29,9 @@ public interface IActorContext<TActor, TRequest> where TActor : IActor<TRequest>
     /// Returns a reference to the sender of the message
     /// </summary>
     public IGenericActorRef? Sender { get; set; }
+
+    /// <summary>
+    /// Returns the actor runner
+    /// </summary>
+    public ActorRunner<TActor, TRequest>? Runner { get; set; }
 }

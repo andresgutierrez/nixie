@@ -15,9 +15,11 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
 
     private readonly ILogger? logger;
 
+    private readonly ConcurrentQueue<ActorMessage<TRequest>> inbox = new();    
+
     private int processing = 1;
 
-    private int shutdown = 1;
+    private int shutdown = 1;    
 
     /// <summary>
     /// Returns the name of the actor
@@ -25,9 +27,14 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     public string Name { get; }
 
     /// <summary>
-    /// The actor's inbox
+    /// Returns true if the actor's inbox is empty
     /// </summary>
-    public ConcurrentQueue<ActorMessage<TRequest>> Inbox { get; } = new();
+    public bool IsEmpty => inbox.IsEmpty;
+
+    /// <summary>
+    /// Returns the number of messages in the inbox
+    /// </summary>
+    public int MessageCount => inbox.Count;
 
     /// <summary>
     /// Reference to the actual actor
@@ -73,7 +80,7 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
         if (shutdown == 0)
             return;
 
-        Inbox.Enqueue(new ActorMessage<TRequest>(message, sender));
+        inbox.Enqueue(new ActorMessage<TRequest>(message, sender));
 
         if (1 == Interlocked.Exchange(ref processing, 0))
             _ = DeliverMessages();
@@ -88,16 +95,23 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
         return 1 == Interlocked.Exchange(ref shutdown, 0);
     }
 
+    /// <summary>
+    /// Enqueues a message to the actor and tries to deliver it.
+    /// The request/response type actors use an object to assign the response once completed.    
+    /// </summary>
+    /// <returns></returns>
     private async Task DeliverMessages()
     {
         try
         {
-            if (Actor is null || shutdown == 0)
+            if (Actor is null || ActorContext is null || shutdown == 0)
                 return;
+
+            ActorContext.Runner = this;
 
             do
             {
-                while (Inbox.TryDequeue(out ActorMessage<TRequest> message))
+                while (inbox.TryDequeue(out ActorMessage<TRequest> message))
                 {
                     if (shutdown == 0)
                         break;

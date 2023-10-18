@@ -36,6 +36,11 @@ public sealed class ActorContext<TActor, TRequest> : IActorContext<TActor, TRequ
     public IGenericActorRef? Sender { get; set; }
 
     /// <summary>
+    /// Returns the actor runner
+    /// </summary>
+    public ActorRunner<TActor, TRequest>? Runner { get; set; }
+
+    /// <summary>
     /// Creates a new actor context.
     /// </summary>
     /// <param name="actorSystem"></param>

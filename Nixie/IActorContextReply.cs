@@ -42,4 +42,9 @@ public interface IActorContext<TActor, TRequest, TResponse>
     /// to allow other consumer to set the response
     /// </summary>
     public bool ByPassReply { get; set; }
+
+    /// <summary>
+    /// Returns the actor runner
+    /// </summary>
+    public ActorRunner<TActor, TRequest, TResponse>? Runner { get; set; }
 }

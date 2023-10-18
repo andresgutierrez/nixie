@@ -49,7 +49,7 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
             {
                 ActorRunner<TActor, TRequest, TResponse> runner = lazyValue.Value.runner;
 
-                if (!runner.IsShutdown && !lazyValue.Value.runner.Inbox.IsEmpty)
+                if (!runner.IsShutdown && !lazyValue.Value.runner.IsEmpty)
                 {
                     actorName = runner.Name;
                     return true;

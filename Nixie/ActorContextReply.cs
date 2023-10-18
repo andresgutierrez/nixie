@@ -7,7 +7,7 @@ namespace Nixie;
 /// Represents an actor context. This class is passed to the actor when it is created.
 /// It can be used to create other actors or get the sender and the actor system.
 /// </summary>
-public sealed class ActorContext<TActor, TRequest, TResponse> : IActorContext<TActor, TRequest, TResponse> 
+public sealed class ActorContext<TActor, TRequest, TResponse> : IActorContext<TActor, TRequest, TResponse>
     where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     private readonly ActorSystem actorSystem;
@@ -46,6 +46,11 @@ public sealed class ActorContext<TActor, TRequest, TResponse> : IActorContext<TA
     /// to allow other consumer to set the response
     /// </summary>
     public bool ByPassReply { get; set; }
+
+    /// <summary>
+    /// Returns the actor runner
+    /// </summary>
+    public ActorRunner<TActor, TRequest, TResponse>? Runner { get; set; }
 
     /// <summary>
     /// Creates a new actor context.
