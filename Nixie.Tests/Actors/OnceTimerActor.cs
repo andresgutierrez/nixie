@@ -33,10 +33,10 @@ public sealed class OnceTimerActor : IActor<OnceTimerMessage>
         receivedMessages++;
     }
 
-    public async Task Receive(OnceTimerMessage message)
-    {
-        await Task.Yield();        
-
+    public Task Receive(OnceTimerMessage message)
+    {        
         IncrMessage();
+
+        return Task.CompletedTask;
     }
 }

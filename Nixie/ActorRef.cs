@@ -6,7 +6,8 @@ namespace Nixie;
 /// </summary>
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
-public sealed class ActorRef<TActor, TRequest> : IGenericActorRef, IActorRef<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
+public sealed class ActorRef<TActor, TRequest> : IGenericActorRef, IActorRef<TActor, TRequest>
+    where TActor : IActor<TRequest> where TRequest : class
 {
     private readonly ActorRunner<TActor, TRequest> runner;
 

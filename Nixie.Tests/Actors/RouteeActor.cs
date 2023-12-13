@@ -1,5 +1,6 @@
 ﻿
 using Nixie.Routers;
+using Nixie.Utils;
 
 namespace Nixie.Tests.Actors;
 

@@ -107,4 +107,48 @@ public sealed class TestScheduler
 
         Assert.Equal(1, numberMessages);
     }
+
+    [Fact]
+    public async void TestCreateOnceTimerExternal()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<FireAndForgetActor, string> actor = asx.Spawn<FireAndForgetActor, string>();
+
+        Assert.IsAssignableFrom<FireAndForgetActor>(actor.Runner.Actor);
+
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(10));
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(20));
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(30));
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(40));
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(50));
+
+        await Task.Delay(1000);
+
+        int numberMessages = ((FireAndForgetActor)actor.Runner.Actor!).GetMessages("TestCreateOnceTimerExternal");
+
+        Assert.Equal(5, numberMessages);
+    }
+
+    [Fact]
+    public async void TestCreateOnceTimerExternalReply()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<ReplyActor, string, string> actor = asx.Spawn<ReplyActor, string, string>();
+
+        Assert.IsAssignableFrom<ReplyActor>(actor.Runner.Actor);
+
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(10));
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(20));
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(30));
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(40));
+        asx.ScheduleOnce(actor, "TestCreateOnceTimerExternal", TimeSpan.FromMilliseconds(50));
+
+        await Task.Delay(1000);
+
+        int numberMessages = ((ReplyActor)actor.Runner.Actor!).GetMessages("TestCreateOnceTimerExternal");
+
+        Assert.Equal(5, numberMessages);
+    }
 }
