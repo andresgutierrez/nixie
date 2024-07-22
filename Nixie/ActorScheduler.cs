@@ -169,6 +169,18 @@ public class ActorScheduler : IDisposable
         StopAllTimersInternal(actorRef);
     }
 
+    /// <summary>
+    /// Stops all timers running in an actor
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    public void StopAllTimers<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        StopAllTimersInternal(actorRef);
+    }
+
     private Timer AddPeriodicTimerInternal<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request, TimeSpan initialDelay, TimeSpan interval)
         where TActor : IActor<TRequest> where TRequest : class
     {

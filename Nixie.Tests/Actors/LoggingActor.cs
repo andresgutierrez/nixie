@@ -14,7 +14,7 @@ public class LoggingActor : IActor<string>
 
     public async Task Receive(string message)
     {
-        await Task.Yield();
+        await Task.CompletedTask;
 
         context.Logger?.LogInformation("Message: {Message}", message);
     }

@@ -103,4 +103,18 @@ public class TestSender
 
         Assert.Equal(1000000, ((SenderActor)actor.Runner.Actor!).GetMessages());
     }
+
+    [Fact]
+    public async Task TestBroadcastMessageAndUseSenderToReplyStruct()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefStruct<SenderActorStruct, SenderRequestStruct> actor = asx.SpawnStruct<SenderActorStruct, SenderRequestStruct>();
+
+        actor.Send(new SenderRequestStruct(SenderRequestType.Broadcast));
+
+        await asx.Wait();
+
+        Assert.Equal(10, ((SenderActorStruct)actor.Runner.Actor!).GetMessages());
+    }
 }

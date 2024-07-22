@@ -5,7 +5,6 @@ namespace Nixie;
 /// Represents a message sent to an actor that doesn't expect a reply.
 /// </summary>
 /// <typeparam name="TRequest"></typeparam>
-/// <typeparam name="TResponse"></typeparam>
 public readonly struct ActorMessage<TRequest>
 {
     /// <summary>

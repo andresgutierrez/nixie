@@ -20,10 +20,10 @@ public sealed class FireAndForgetSlowActor : IActor<string>
 
     public void IncrMessage(string id)
     {
-        if (!receivedMessages.ContainsKey(id))
+        if (!receivedMessages.TryGetValue(id, out int value))
             receivedMessages.Add(id, 1);
         else
-            receivedMessages[id]++;
+            receivedMessages[id] = ++value;
     }
 
     public async Task Receive(string message)

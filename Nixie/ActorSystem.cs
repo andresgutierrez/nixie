@@ -79,6 +79,22 @@ public sealed class ActorSystem : IDisposable
     }
 
     /// <summary>
+    /// Creates a new fire-n-forget actor and returns a typed reference to a struct actor
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public IActorRefStruct<TActor, TRequest> SpawnStruct<TActor, TRequest>(string? name = null, params object[]? args)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest> repository = GetRepositoryStruct<TActor, TRequest>();
+
+        return repository.Spawn(name, args);
+    }
+
+    /// <summary>
     /// Returns a request/response actor by its name and null if it doesn't exist.
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
@@ -190,7 +206,7 @@ public sealed class ActorSystem : IDisposable
         );
 
         return (ActorRepository<TActor, TRequest, TResponse>)repository.Value;
-    }
+    }    
 
     private ActorRepository<TActor, TRequest, TResponse> CreateRepository<TActor, TRequest, TResponse>()
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
@@ -210,16 +226,52 @@ public sealed class ActorSystem : IDisposable
     {
         Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
             typeof(TActor),
-            (type) => new Lazy<IActorRepositoryRunnable>(() => CreateRepository<TActor, TRequest>())
+            CreateRepositoryInternal<TActor, TRequest>
         );
 
         return (ActorRepository<TActor, TRequest>)repository.Value;
     }
 
-    private ActorRepository<TActor, TRequest> CreateRepository<TActor, TRequest>()
+    private Lazy<IActorRepositoryRunnable> CreateRepositoryInternal<TActor, TRequest>(Type type)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        return new Lazy<IActorRepositoryRunnable>(() => CreateRepositoryBuilder<TActor, TRequest>());
+    }
+
+    private ActorRepository<TActor, TRequest> CreateRepositoryBuilder<TActor, TRequest>()
         where TActor : IActor<TRequest> where TRequest : class
     {
         ActorRepository<TActor, TRequest> repository = new(this, serviceProvider, logger);
+        return repository;
+    }
+
+    /// <summary>
+    /// Returns the repository where the current references to fire-n-forget actors are stored.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <returns></returns>
+    public ActorRepositoryStruct<TActor, TRequest> GetRepositoryStruct<TActor, TRequest>()
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
+            typeof(TActor),
+            CreateRepositoryStructInternal<TActor, TRequest>
+        );
+
+        return (ActorRepositoryStruct<TActor, TRequest>)repository.Value;
+    }
+
+    private Lazy<IActorRepositoryRunnable> CreateRepositoryStructInternal<TActor, TRequest>(Type type)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        return new Lazy<IActorRepositoryRunnable>(() => CreateRepositoryStructBuilder<TActor, TRequest>());
+    }
+
+    private ActorRepositoryStruct<TActor, TRequest> CreateRepositoryStructBuilder<TActor, TRequest>()
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest> repository = new(this, serviceProvider, logger);
         return repository;
     }
 
@@ -330,6 +382,18 @@ public sealed class ActorSystem : IDisposable
     /// <param name="actorRef"></param>
     public void StopAllTimers<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef)
         where TActor : IActor<TRequest> where TRequest : class
+    {
+        scheduler.StopAllTimers(actorRef);
+    }
+
+    /// <summary>
+    /// Stops all timers running or scheduled for the specified actor.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    public void StopAllTimers<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
     {
         scheduler.StopAllTimers(actorRef);
     }
