@@ -79,6 +79,23 @@ public sealed class ActorSystem : IDisposable
     }
 
     /// <summary>
+    /// Creates a new request/response actor and returns a typed reference.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public IActorRefStruct<TActor, TRequest, TResponse> SpawnStruct<TActor, TRequest, TResponse>(string? name = null, params object[]? args)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest, TResponse> repository = GetRepositoryStruct<TActor, TRequest, TResponse>();
+
+        return repository.Spawn(name, args);
+    }
+
+    /// <summary>
     /// Creates a new fire-n-forget actor and returns a typed reference to a struct actor
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
@@ -206,7 +223,7 @@ public sealed class ActorSystem : IDisposable
         );
 
         return (ActorRepository<TActor, TRequest, TResponse>)repository.Value;
-    }    
+    }
 
     private ActorRepository<TActor, TRequest, TResponse> CreateRepository<TActor, TRequest, TResponse>()
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
@@ -272,6 +289,31 @@ public sealed class ActorSystem : IDisposable
         where TActor : IActorStruct<TRequest> where TRequest : struct
     {
         ActorRepositoryStruct<TActor, TRequest> repository = new(this, serviceProvider, logger);
+        return repository;
+    }
+
+    /// <summary>
+    /// Returns the repository where the current references to request/response actors are stored.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <returns></returns>
+    public ActorRepositoryStruct<TActor, TRequest, TResponse> GetRepositoryStruct<TActor, TRequest, TResponse>()
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
+            typeof(TActor),
+            (type) => new Lazy<IActorRepositoryRunnable>(() => CreateRepositoryStruct<TActor, TRequest, TResponse>())
+        );
+
+        return (ActorRepositoryStruct<TActor, TRequest, TResponse>)repository.Value;
+    }
+
+    private ActorRepositoryStruct<TActor, TRequest, TResponse> CreateRepositoryStruct<TActor, TRequest, TResponse>()
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest, TResponse> repository = new(this, serviceProvider, logger);
         return repository;
     }
 

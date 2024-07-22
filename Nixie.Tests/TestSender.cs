@@ -117,4 +117,37 @@ public class TestSender
 
         Assert.Equal(10, ((SenderActorStruct)actor.Runner.Actor!).GetMessages());
     }
+
+    [Fact]
+    public async Task TestBroadcastMultipleMessageAndUseSenderToReplyStruct()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefStruct<SenderActorStruct, SenderRequestStruct> actor = asx.SpawnStruct<SenderActorStruct, SenderRequestStruct>();
+
+        for (int i = 0; i < 10; i++)
+            actor.Send(new SenderRequestStruct(SenderRequestType.Broadcast));
+
+        await asx.Wait();
+
+        Assert.Equal(100, ((SenderActorStruct)actor.Runner.Actor!).GetMessages());
+    }
+
+    [Fact]
+    public async Task TestBroadcastMixedMessagesAndUseSenderToReplyStruct()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefStruct<SenderActorStruct, SenderRequestStruct> actor = asx.SpawnStruct<SenderActorStruct, SenderRequestStruct>();
+
+        for (int i = 0; i < 10; i++)
+        {
+            actor.Send(new SenderRequestStruct(SenderRequestType.Broadcast));
+            actor.Send(new SenderRequestStruct(SenderRequestType.BroadcastNobody));
+        }
+
+        await asx.Wait();
+
+        Assert.Equal(100, ((SenderActorStruct)actor.Runner.Actor!).GetMessages());
+    }
 }

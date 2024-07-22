@@ -212,4 +212,18 @@ public class TestSendMessages
 
         Assert.Equal(4, ((FireAndForgetPropsActor)actor.Runner.Actor!).GetMessages("hello"));
     }
+
+    [Fact]
+    public async Task TestSendMessageToSingleActorRef()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefStruct<ReplyActorStruct, int, int> actor = asx.SpawnStruct<ReplyActorStruct, int, int>();
+
+        actor.Send(100);
+
+        await asx.Wait();
+
+        Assert.Equal(1, ((ReplyActorStruct)actor.Runner.Actor!).GetMessages(100));
+    }
 }

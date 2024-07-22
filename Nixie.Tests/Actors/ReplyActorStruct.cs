@@ -1,16 +1,16 @@
 ﻿
 namespace Nixie.Tests.Actors;
 
-public sealed class ReplyActor : IActor<string, string>
+public sealed class ReplyActorStruct : IActorStruct<int, int>
 {
-    private readonly Dictionary<string, int> receivedMessages = new();
+    private readonly Dictionary<int, int> receivedMessages = new();
 
-    public ReplyActor(IActorContext<ReplyActor, string, string> _)
+    public ReplyActorStruct(IActorContextStruct<ReplyActorStruct, int, int> _)
     {
 
     }
 
-    public int GetMessages(string id)
+    public int GetMessages(int id)
     {
         if (receivedMessages.TryGetValue(id, out int number))
             return number;
@@ -18,7 +18,7 @@ public sealed class ReplyActor : IActor<string, string>
         return 0;
     }
 
-    public void IncrMessage(string id)
+    public void IncrMessage(int id)
     {
         if (!receivedMessages.TryGetValue(id, out int value))
             receivedMessages.Add(id, 1);
@@ -26,10 +26,10 @@ public sealed class ReplyActor : IActor<string, string>
             receivedMessages[id] = ++value;
     }
 
-    public Task<string?> Receive(string message)
+    public Task<int> Receive(int message)
     {
         IncrMessage(message);
 
-        return Task.FromResult<string?>(message);
+        return Task.FromResult<int>(message);
     }
 }
