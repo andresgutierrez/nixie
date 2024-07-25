@@ -142,6 +142,22 @@ public sealed class ActorSystem : IDisposable
     }
 
     /// <summary>
+    /// Returns a fire-n-forget actor by its name and null if it doesn't exist.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public IActorRefStruct<TActor, TRequest>? GetStruct<TActor, TRequest>(string name) where TActor : IActorStruct<TRequest>
+        where TRequest : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest> repository = GetRepositoryStruct<TActor, TRequest>();
+
+        return repository.Get(name);
+    }
+
+    /// <summary>
     /// Shutdowns an actor by its name
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
@@ -225,10 +241,58 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
+    public bool ShutdownStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest, TResponse> repository = GetRepositoryStruct<TActor, TRequest, TResponse>();
+
+        return repository.Shutdown(actorRef);
+    }
+
+    /// <summary>
+    /// Shutdowns an actor by its name
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public bool ShutdownStruct<TActor, TRequest>(string name) where TActor : IActorStruct<TRequest>
+        where TRequest : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest> repository = GetRepositoryStruct<TActor, TRequest>();
+
+        return repository.Shutdown(name);
+    }
+
+    /// <summary>
+    /// Shutdowns an actor by its reference
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="name"></param>
+    /// <returns></returns>
     public bool Shutdown<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef)
         where TActor : IActor<TRequest> where TRequest : class
     {
         ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
+
+        return repository.Shutdown(actorRef);
+    }
+
+    /// <summary>
+    /// Shutdowns an actor by its reference
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public bool ShutdownStruct<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest> repository = GetRepositoryStruct<TActor, TRequest>();
 
         return repository.Shutdown(actorRef);
     }

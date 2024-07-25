@@ -8,13 +8,14 @@ Nixie is a lightweight, high-performance implementation of the [actor model](htt
 
 ## Features
 
-- **Strongly-Typed Actors:** Ensuring that your actor interactions are type-safe and as per expectations. High use of [generics](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics) to avoid as much unnecessary boxing/unboxing as possible. 
+- **Strongly-Typed Actors:** Ensuring that your actor interactions are type-safe and as per expectations. High use of [generics](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics) to ensure that errors related to type mismatches are caught at compile time rather than at runtime. This reduces the risk of runtime exceptions and makes the code more robust.
 - **Nullable Support:** Full support for [nullability](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types) in line with the latest C# features, ensuring your code is robust and safeguarded against null reference issues.
 - **Lifecycle Management:** Nixie handles the meticulous management of actor lifecycle, allowing developers to focus on implementing logic.
-- **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nixie ensures that your actor systems are both scalable and performant.
+- **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nixie ensures that your actor systems are both scalable and performant. Additionally the use of Generics eliminate the need for boxing and unboxing when working with value types, which can improve performance. Boxing is the process of converting a value type to an object type, and unboxing is the reverse.
 - **Less Error Prone:** The strongly-typed nature and nullability checks inherently make your actor system more reliable and resilient.
 - **Built on TPL:** Make the most out of the robust, scalable, and performant asynchronous programming features offered by TPL.
 - **Multi-Threading:** To increase throughput, Nixie makes use of thread-safe structures that avoid locks wherever possible and use fine-grained locking where locks are necessary. Abstracting the complexities of multithreaded programming into an API that is easy to use and understand.
+- **Production-Ready:** Nixie has been tested in production environments with many concurrent users, ensuring reliability and stability under real-world conditions.
 
 ## Getting Started
 
