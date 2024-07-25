@@ -8,7 +8,7 @@ namespace Nixie.Tests;
 public sealed class TestRouters
 {
     [Fact]
-    public async void TestCreateRoundRobinRouter()
+    public async Task TestCreateRoundRobinRouter()
     {
         using ActorSystem asx = new();
 
@@ -37,7 +37,7 @@ public sealed class TestRouters
     }
 
     [Fact]
-    public async void TestCreateRoundRobinRouterExt()
+    public async Task TestCreateRoundRobinRouterExt()
     {
         using ActorSystem asx = new();
 
@@ -65,7 +65,7 @@ public sealed class TestRouters
     }
 
     [Fact]
-    public async void TestCreateRoundRobinRouterExtInstances()
+    public async Task TestCreateRoundRobinRouterExtInstances()
     {
         using ActorSystem asx = new();
 
@@ -98,7 +98,7 @@ public sealed class TestRouters
     }
 
     [Fact]
-    public async void TestCreateRoundRobinRouterSlowSend()
+    public async Task TestCreateRoundRobinRouterSlowSend()
     {
         using ActorSystem asx = new();
 
@@ -124,7 +124,7 @@ public sealed class TestRouters
     }
 
     [Fact]
-    public async void TestCreateRoundRobinRouterReply()
+    public async Task TestCreateRoundRobinRouterReply()
     {
         using ActorSystem asx = new();
 
@@ -151,7 +151,7 @@ public sealed class TestRouters
     }
 
     [Fact]
-    public async void TestCreateRoundRobinRouterReplyExtInstances()
+    public async Task TestCreateRoundRobinRouterReplyExtInstances()
     {
         using ActorSystem asx = new();
 
@@ -183,7 +183,7 @@ public sealed class TestRouters
     }
 
     [Fact]
-    public async void TestCreateRoundRobinRouterReplyExt()
+    public async Task TestCreateRoundRobinRouterReplyExt()
     {
         using ActorSystem asx = new();
 
@@ -210,7 +210,7 @@ public sealed class TestRouters
     }
 
     [Fact]
-    public async void TestCreateConsistentHashRouter()
+    public async Task TestCreateConsistentHashRouter()
     {
         using ActorSystem asx = new();
 
@@ -239,7 +239,7 @@ public sealed class TestRouters
     }
 
     [Fact]
-    public async void TestCreateConsistentHashRouterExt()
+    public async Task TestCreateConsistentHashRouterExt()
     {
         using ActorSystem asx = new();
 
@@ -273,7 +273,7 @@ public sealed class TestRouters
     }
 
     [Fact]
-    public async void TestCreateConsistentHashRouterReply()
+    public async Task TestCreateConsistentHashRouterReply()
     {
         using ActorSystem asx = new();
 
@@ -302,15 +302,14 @@ public sealed class TestRouters
     }   
 
     [Fact]
-    public async void TestCreateConsistentHashRouterReplyParallel()
+    public async Task TestCreateConsistentHashRouterReplyParallel()
     {
         using ActorSystem asx = new();
 
         IActorRef<ConsistentHashActor<RouteeReplyActor, RouterMessage, RouterResponse>, RouterMessage, RouterResponse> router =
             asx.Spawn<ConsistentHashActor<RouteeReplyActor, RouterMessage, RouterResponse>, RouterMessage, RouterResponse>("my-router", 5);
 
-        Task[] tasks = new Task[5]
-        {
+        Task[] tasks = {
             router.Ask(new RouterMessage(RouterMessageType.Route, "aaa")),
             router.Ask(new RouterMessage(RouterMessageType.Route, "bbb")),
             router.Ask(new RouterMessage(RouterMessageType.Route, "ccc")),

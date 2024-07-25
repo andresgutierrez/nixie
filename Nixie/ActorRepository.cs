@@ -110,7 +110,7 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
 
         Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)> actor = actors.GetOrAdd(
             name,
-            (string name) => new Lazy<(ActorRunner<TActor, TRequest>, ActorRef<TActor, TRequest>)>(() => CreateInternal(name, args))
+            (string _) => new(() => CreateInternal(name, args))
         );
 
         return actor.Value.actorRef;
@@ -214,6 +214,26 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
                 actors.TryRemove(name, out _);
                 return true;
             }
+        }
+
+        return true;
+    }
+    
+    /// <summary>
+    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown(string name, TimeSpan maxWait)
+    {
+        name = name.ToLowerInvariant();
+
+        if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)>? actor))
+        {
+            bool result = await actor.Value.runner.GracefulShutdown(maxWait);
+            actors.TryRemove(name, out _);
+            return result;
         }
 
         return true;

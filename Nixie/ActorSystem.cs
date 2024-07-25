@@ -19,12 +19,10 @@ public sealed class ActorSystem : IDisposable
 
     private readonly ConcurrentDictionary<Type, Lazy<IActorRepositoryRunnable>> repositories = new();
 
-    private readonly IActorRef<NobodyActor, object> nobody;
-
     /// <summary>
     /// Returns the reference to the nobody actor. This actor is used when a message is sent to an actor that doesn't exist.
     /// </summary>
-    public IActorRef<NobodyActor, object> Nobody => nobody;
+    public IActorRef<NobodyActor, object> Nobody { get; }
 
     /// <summary>
     /// Returns the actor scheduler
@@ -42,7 +40,7 @@ public sealed class ActorSystem : IDisposable
         this.logger = logger;
         this.scheduler = new(logger);
 
-        nobody = Spawn<NobodyActor, object>();
+        Nobody = Spawn<NobodyActor, object>();
     }
 
     /// <summary>
@@ -158,6 +156,34 @@ public sealed class ActorSystem : IDisposable
 
         return repository.Shutdown(name);
     }
+    
+    /// <summary>
+    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// /// <param name="maxWait"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown<TActor, TRequest>(string name, TimeSpan maxWait) where TActor : IActor<TRequest>
+        where TRequest : class
+    {
+        ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
+
+        return await repository.GracefulShutdown(name, maxWait);
+    }
+
+    /// <summary>
+    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// /// <param name="maxWait"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown<TActor, TRequest, TResponse>(string name, TimeSpan maxWait) where TActor : IActor<TRequest, TResponse>
+        where TRequest : class where TResponse : class
+    {
+        ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
+
+        return await repository.GracefulShutdown(name, maxWait);
+    }
 
     /// <summary>
     /// Shutdowns an actor by its reference
@@ -219,7 +245,7 @@ public sealed class ActorSystem : IDisposable
     {
         Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
             typeof(TActor),
-            (type) => new Lazy<IActorRepositoryRunnable>(() => CreateRepository<TActor, TRequest, TResponse>())
+            (type) => new(CreateRepository<TActor, TRequest, TResponse>)
         );
 
         return (ActorRepository<TActor, TRequest, TResponse>)repository.Value;
@@ -252,7 +278,7 @@ public sealed class ActorSystem : IDisposable
     private Lazy<IActorRepositoryRunnable> CreateRepositoryInternal<TActor, TRequest>(Type type)
         where TActor : IActor<TRequest> where TRequest : class
     {
-        return new Lazy<IActorRepositoryRunnable>(() => CreateRepositoryBuilder<TActor, TRequest>());
+        return new(CreateRepositoryBuilder<TActor, TRequest>);
     }
 
     private ActorRepository<TActor, TRequest> CreateRepositoryBuilder<TActor, TRequest>()
@@ -282,7 +308,7 @@ public sealed class ActorSystem : IDisposable
     private Lazy<IActorRepositoryRunnable> CreateRepositoryStructInternal<TActor, TRequest>(Type type)
         where TActor : IActorStruct<TRequest> where TRequest : struct
     {
-        return new Lazy<IActorRepositoryRunnable>(() => CreateRepositoryStructBuilder<TActor, TRequest>());
+        return new(CreateRepositoryStructBuilder<TActor, TRequest>);
     }
 
     private ActorRepositoryStruct<TActor, TRequest> CreateRepositoryStructBuilder<TActor, TRequest>()
@@ -304,7 +330,7 @@ public sealed class ActorSystem : IDisposable
     {
         Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
             typeof(TActor),
-            (type) => new Lazy<IActorRepositoryRunnable>(() => CreateRepositoryStruct<TActor, TRequest, TResponse>())
+            (type) => new(CreateRepositoryStruct<TActor, TRequest, TResponse>)
         );
 
         return (ActorRepositoryStruct<TActor, TRequest, TResponse>)repository.Value;
@@ -348,6 +374,39 @@ public sealed class ActorSystem : IDisposable
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         scheduler.StartPeriodicTimer(actorRef, name, request, initialDelay, interval);
+    }
+    
+    /// <summary>
+    /// Creates a new periodic timer that will send a message to the specified actor every interval.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="initialDelay"></param>
+    /// <param name="interval"></param>
+    public void StartPeriodicTimerStruct<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef, string name, TRequest request, TimeSpan initialDelay, TimeSpan interval)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        scheduler.StartPeriodicTimerStruct(actorRef, name, request, initialDelay, interval);
+    }
+    
+    /// <summary>
+    /// Creates a new periodic timer that will send a message to the specified actor every interval.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="initialDelay"></param>
+    /// <param name="interval"></param>
+    public void StartPeriodicTimerStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef, string name, TRequest request, TimeSpan initialDelay, TimeSpan interval)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        scheduler.StartPeriodicTimerStruct(actorRef, name, request, initialDelay, interval);
     }
 
     /// <summary>

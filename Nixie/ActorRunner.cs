@@ -16,6 +16,8 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     private readonly ILogger? logger;
 
     private readonly ConcurrentQueue<ActorMessage<TRequest>> inbox = new();    
+    
+    private TaskCompletionSource? gracefulShutdown;
 
     private int processing = 1;
 
@@ -94,6 +96,34 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     {
         return 1 == Interlocked.Exchange(ref shutdown, 0);
     }
+    
+    /// <summary>
+    /// Tries to shutdown the actor returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async ValueTask<bool> GracefulShutdown(TimeSpan maxWait)
+    {
+        if (inbox.IsEmpty)
+            return Shutdown();
+
+        if (gracefulShutdown is not null)
+            return false;
+
+        gracefulShutdown = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Task timeout = Task.Delay(maxWait);
+
+        Task completed = await Task.WhenAny(
+            timeout,
+            gracefulShutdown.Task
+        );
+
+        if (completed == timeout)
+            Shutdown();
+
+        return completed != timeout;
+    }
 
     /// <summary>
     /// Enqueues a message to the actor and tries to deliver it.
@@ -105,7 +135,10 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
         try
         {
             if (Actor is null || ActorContext is null || shutdown == 0)
+            {
+                gracefulShutdown?.SetResult();
                 return;
+            }
 
             ActorContext.Runner = this;
 
@@ -134,6 +167,8 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
                     }
                 }
             } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
+            
+            gracefulShutdown?.SetResult();
         }
         catch (Exception ex)
         {

@@ -197,6 +197,28 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
     }
 
     /// <summary>
+    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown(string name, TimeSpan maxWait)
+    {
+        name = name.ToLowerInvariant();
+
+        if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
+        {
+            if (await actor.Value.runner.GracefulShutdown(maxWait))
+            {
+                actors.TryRemove(name, out _);
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
     /// Shutdowns an actor by its reference
     /// </summary>
     /// <param name="actorRef"></param>
@@ -208,6 +230,28 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
         {
             if (actor.Value.runner.Shutdown())
+            {
+                actors.TryRemove(name, out _);
+                return true;
+            }
+        }
+
+        return true;
+    }
+    
+    /// <summary>
+    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="actorRef"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown(IActorRef<TActor, TRequest, TResponse> actorRef, TimeSpan maxWait)
+    {
+        string name = actorRef.Runner.Name;
+
+        if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
+        {
+            if (await actor.Value.runner.GracefulShutdown(maxWait))
             {
                 actors.TryRemove(name, out _);
                 return true;

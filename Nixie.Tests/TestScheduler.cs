@@ -8,7 +8,7 @@ namespace Nixie.Tests;
 public sealed class TestScheduler
 {
     [Fact]
-    public async void TestCreatePeriodicTimer()
+    public async Task TestCreatePeriodicTimer()
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
         {
@@ -31,9 +31,34 @@ public sealed class TestScheduler
 
         Assert.Equal(6, numberMessages);
     }
+    
+    [Fact]
+    public async Task TestCreatePeriodicTimerStruct()
+    {
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddFilter("Nixie", LogLevel.Debug)
+                .AddConsole();
+        });
+
+        ILogger logger = loggerFactory.CreateLogger<TestSendMessages>();
+
+        using ActorSystem asx = new(logger: logger);
+
+        IActorRefStruct<PeriodicTimerActorStruct, int> actor = asx.SpawnStruct<PeriodicTimerActorStruct, int>();
+
+        Assert.IsAssignableFrom<PeriodicTimerActorStruct>(actor.Runner.Actor);
+
+        await Task.Delay(5500);
+
+        int numberMessages = ((PeriodicTimerActorStruct)actor.Runner.Actor!).GetMessages(100);
+
+        Assert.Equal(6, numberMessages);
+    }
 
     [Fact]
-    public async void TestCreatePeriodicTimerExternalStop()
+    public async Task TestCreatePeriodicTimerExternalStop()
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
         {
@@ -93,7 +118,7 @@ public sealed class TestScheduler
     }
 
     [Fact]
-    public async void TestCreateOnceTimer()
+    public async Task TestCreateOnceTimer()
     {
         using ActorSystem asx = new();
 
@@ -109,7 +134,7 @@ public sealed class TestScheduler
     }
 
     [Fact]
-    public async void TestCreateOnceTimerExternal()
+    public async Task TestCreateOnceTimerExternal()
     {
         using ActorSystem asx = new();
 
@@ -131,7 +156,7 @@ public sealed class TestScheduler
     }
 
     [Fact]
-    public async void TestCreateOnceTimerExternalReply()
+    public async Task TestCreateOnceTimerExternalReply()
     {
         using ActorSystem asx = new();
 

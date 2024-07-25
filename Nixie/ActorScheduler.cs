@@ -38,8 +38,8 @@ public class ActorScheduler : IDisposable
         if (periodicTimers.ContainsKey(name))
             throw new NixieException("There is already an active timer with this name.");
 
-        Lazy<ConcurrentDictionary<string, Lazy<Timer>>> timers = periodicTimers.GetOrAdd(actorRef, (actorRef) => new Lazy<ConcurrentDictionary<string, Lazy<Timer>>>());
-        Lazy<Timer> timer = timers.Value.GetOrAdd(name, (string name) => new Lazy<Timer>(() => AddPeriodicTimerInternal(actorRef, request, initialDelay, interval)));
+        Lazy<ConcurrentDictionary<string, Lazy<Timer>>> timers = periodicTimers.GetOrAdd(actorRef, (_) => new());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(name, (string _) => new(() => AddPeriodicTimerInternal(actorRef, request, initialDelay, interval)));
         return timer.Value;
     }
 
@@ -62,8 +62,53 @@ public class ActorScheduler : IDisposable
         if (periodicTimers.ContainsKey(name))
             throw new NixieException("There is already an active timer with this name.");
 
-        Lazy<ConcurrentDictionary<string, Lazy<Timer>>> timers = periodicTimers.GetOrAdd(actorRef, (actorRef) => new Lazy<ConcurrentDictionary<string, Lazy<Timer>>>());
-        Lazy<Timer> timer = timers.Value.GetOrAdd(name, (string name) => new Lazy<Timer>(() => AddPeriodicTimerInternal(actorRef, request, initialDelay, interval)));
+        Lazy<ConcurrentDictionary<string, Lazy<Timer>>> timers = periodicTimers.GetOrAdd(actorRef, (_) => new());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(name, (string _) => new(() => AddPeriodicTimerInternal(actorRef, request, initialDelay, interval)));
+        return timer.Value;
+    }
+    
+    /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay at a specified interval.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="initialDelay"></param>
+    /// <param name="interval"></param>
+    public Timer StartPeriodicTimerStruct<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef, string name, TRequest request, TimeSpan initialDelay, TimeSpan interval)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        if (periodicTimers.ContainsKey(name))
+            throw new NixieException("There is already an active timer with this name.");
+
+        Lazy<ConcurrentDictionary<string, Lazy<Timer>>> timers = periodicTimers.GetOrAdd(actorRef, (_) => new());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(name, (string _) => new(() => AddPeriodicTimerInternalStruct(actorRef, request, initialDelay, interval)));
+        return timer.Value;
+    }
+    
+    /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay at a specified interval.
+    /// </summary>
+    /// <param name="actorRef"></param>
+    /// <param name="name"></param>
+    /// <param name="request"></param>
+    /// <param name="initialDelay"></param>
+    /// <param name="interval"></param>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <returns></returns>
+    /// <exception cref="NixieException"></exception>
+    public Timer StartPeriodicTimerStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef, string name, TRequest request, TimeSpan initialDelay, TimeSpan interval)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        if (periodicTimers.ContainsKey(name))
+            throw new NixieException("There is already an active timer with this name.");
+
+        Lazy<ConcurrentDictionary<string, Lazy<Timer>>> timers = periodicTimers.GetOrAdd(actorRef, (_) => new());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(name, (string _) => new(() => AddPeriodicTimerInternalStruct(actorRef, request, initialDelay, interval)));
         return timer.Value;
     }
 
@@ -81,8 +126,8 @@ public class ActorScheduler : IDisposable
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         long seq = Interlocked.Increment(ref sequence);
-        Lazy<ConcurrentDictionary<long, Lazy<Timer>>> timers = onceTimers.GetOrAdd(actorRef, (object actorRef) => new Lazy<ConcurrentDictionary<long, Lazy<Timer>>>());
-        Lazy<Timer> timer = timers.Value.GetOrAdd(seq, (long key) => new Lazy<Timer>(() => ScheduleOnceTimer(actorRef, request, delay, seq)));
+        Lazy<ConcurrentDictionary<long, Lazy<Timer>>> timers = onceTimers.GetOrAdd(actorRef, (object _) => new());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(seq, (long key) => new(() => ScheduleOnceTimer(actorRef, request, delay, seq)));
         return timer.Value;
     }
 
@@ -99,8 +144,8 @@ public class ActorScheduler : IDisposable
         where TActor : IActor<TRequest> where TRequest : class
     {
         long seq = Interlocked.Increment(ref sequence);
-        Lazy<ConcurrentDictionary<long, Lazy<Timer>>> timers = onceTimers.GetOrAdd(actorRef, (object actorRef) => new Lazy<ConcurrentDictionary<long, Lazy<Timer>>>());
-        Lazy<Timer> timer = timers.Value.GetOrAdd(seq, (long key) => new Lazy<Timer>(() => ScheduleOnceTimer(actorRef, request, delay, seq)));
+        Lazy<ConcurrentDictionary<long, Lazy<Timer>>> timers = onceTimers.GetOrAdd(actorRef, (object _) => new());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(seq, (long key) => new(() => ScheduleOnceTimer(actorRef, request, delay, seq)));
         return timer.Value;
     }
 
@@ -192,6 +237,18 @@ public class ActorScheduler : IDisposable
     {
         return new((state) => SendScheduledMessage(actorRef, request, -1), null, initialDelay, interval);
     }
+    
+    private Timer AddPeriodicTimerInternalStruct<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef, TRequest request, TimeSpan initialDelay, TimeSpan interval)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        return new((state) => SendScheduledMessage(actorRef, request, -1), null, initialDelay, interval);
+    }
+    
+    private Timer AddPeriodicTimerInternalStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan initialDelay, TimeSpan interval)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        return new((state) => SendScheduledMessage(actorRef, request, -1), null, initialDelay, interval);
+    }
 
     private Timer ScheduleOnceTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TRequest request, TimeSpan delay, long random)
         where TActor : IActor<TRequest> where TRequest : class
@@ -231,6 +288,54 @@ public class ActorScheduler : IDisposable
 
     private void SendScheduledMessage<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request, long random)
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
+    {
+        try
+        {
+            actorRef.Send(request);
+
+            if (random > -1 && onceTimers.TryGetValue(actorRef, out Lazy<ConcurrentDictionary<long, Lazy<Timer>>>? timers))
+            {
+                if (!timers.Value.TryGetValue(random, out Lazy<Timer>? timer))
+                    return;
+
+                if (timer.IsValueCreated)
+                    timer.Value.Dispose();
+
+                timers.Value.TryRemove(random, out _);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError("{Ex}", ex.Message);
+        }
+    }
+    
+    private void SendScheduledMessage<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef, TRequest request, long random)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        try
+        {
+            actorRef.Send(request);
+
+            if (random > -1 && onceTimers.TryGetValue(actorRef, out Lazy<ConcurrentDictionary<long, Lazy<Timer>>>? timers))
+            {
+                if (!timers.Value.TryGetValue(random, out Lazy<Timer>? timer))
+                    return;
+
+                if (timer.IsValueCreated)
+                    timer.Value.Dispose();
+
+                timers.Value.TryRemove(random, out _);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError("{Ex}", ex.Message);
+        }
+    }
+    
+    private void SendScheduledMessage<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef, TRequest request, long random)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
     {
         try
         {

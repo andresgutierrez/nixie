@@ -17,7 +17,7 @@ public class ShutdownInsideActor : IActor<string>
         return receivedMessages;
     }
 
-    public void IncrMessage()
+    private void IncrMessage()
     {
         receivedMessages++;
     }
@@ -31,5 +31,4 @@ public class ShutdownInsideActor : IActor<string>
         else
             IncrMessage();
     }
-
 }

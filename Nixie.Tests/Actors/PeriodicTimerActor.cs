@@ -12,13 +12,10 @@ public sealed class PeriodicTimerActor : IActor<string>
 
     public int GetMessages(string id)
     {
-        if (receivedMessages.TryGetValue(id, out int number))
-            return number;
-
-        return 0;
+        return receivedMessages.GetValueOrDefault(id, 0);
     }
 
-    public void IncrMessage(string id)
+    private void IncrMessage(string id)
     {
         if (!receivedMessages.TryGetValue(id, out int value))
             receivedMessages.Add(id, 1);

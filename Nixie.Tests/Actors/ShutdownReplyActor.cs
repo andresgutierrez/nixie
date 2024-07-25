@@ -1,11 +1,10 @@
-﻿
 namespace Nixie.Tests.Actors;
 
-public sealed class ShutdownActor : IActor<string>
+public sealed class ShutdownReplyActor : IActor<string, string>
 {
     private int receivedMessages;
 
-    public ShutdownActor(IActorContext<ShutdownActor, string> _)
+    public ShutdownReplyActor(IActorContext<ShutdownReplyActor, string, string> _)
     {
         
     }
@@ -20,10 +19,12 @@ public sealed class ShutdownActor : IActor<string>
         receivedMessages++;
     }
 
-    public async Task Receive(string message)
+    public async Task<string?> Receive(string message)
     {
         await Task.Yield();
 
         IncrMessage();
+
+        return message;
     }
 }

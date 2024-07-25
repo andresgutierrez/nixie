@@ -1,6 +1,7 @@
 ﻿
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using Nixie.Utils;
 
 namespace Nixie;
 
@@ -17,6 +18,8 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     private readonly ILogger? logger;
 
     private readonly ConcurrentQueue<ActorMessageReply<TRequest, TResponse>> inbox = new();
+    
+    private TaskCompletionSource? gracefulShutdown;
 
     private int processing = 1;
 
@@ -114,6 +117,34 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     }
 
     /// <summary>
+    /// Tries to shutdown the actor returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async ValueTask<bool> GracefulShutdown(TimeSpan maxWait)
+    {
+        if (inbox.IsEmpty)
+            return Shutdown();
+
+        if (gracefulShutdown is not null)
+            return false;
+
+        gracefulShutdown = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Task timeout = Task.Delay(maxWait);
+
+        Task completed = await Task.WhenAny(
+            timeout,
+            gracefulShutdown.Task
+        );
+        
+        if (completed == timeout)
+            Shutdown();
+
+        return completed != timeout;
+    }
+
+    /// <summary>
     /// It retrieves a message from the inbox and invokes the actor by passing one message 
     /// at a time until the pending message list is cleared.
     /// </summary>
@@ -123,7 +154,10 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
         try
         {
             if (Actor is null || ActorContext is null || shutdown == 0)
+            {
+                gracefulShutdown?.SetResult();
                 return;
+            }
 
             ActorContext.Runner = this;
 
@@ -157,6 +191,8 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
                     }
                 }
             } while (shutdown == 1 && (Interlocked.CompareExchange(ref processing, 1, 0) != 0));
+
+            gracefulShutdown?.SetResult();
         }
         catch (Exception ex)
         {
