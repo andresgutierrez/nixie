@@ -226,4 +226,50 @@ public class TestSendMessages
 
         Assert.Equal(1, ((ReplyActorStruct)actor.Runner.Actor!).GetMessages(100));
     }
+
+    [Fact]
+    public async Task TestSendMultipleMessageToSingleActorStruct()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefStruct<ReplyActorStruct, int, int> actor = asx.SpawnStruct<ReplyActorStruct, int, int>();
+
+        actor.Send(100);
+        actor.Send(100);
+        actor.Send(100);
+
+        await asx.Wait();
+
+        Assert.Equal(3, ((ReplyActorStruct)actor.Runner.Actor!).GetMessages(100));
+    }
+
+    [Fact]
+    public async Task TestSendMessageToSingleActorNoResponseStruct()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefStruct<FireAndForgetActorStruct, int> actor = asx.SpawnStruct<FireAndForgetActorStruct, int>();
+
+        actor.Send(100);
+
+        await asx.Wait();
+
+        Assert.Equal(1, ((FireAndForgetActorStruct)actor.Runner.Actor!).GetMessages(100));
+    }
+
+    [Fact]
+    public async Task TestSendMultipleMessageToSingleActorNoResponseStruct()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefStruct<FireAndForgetActorStruct, int> actor = asx.SpawnStruct<FireAndForgetActorStruct, int>("TestSendMultipleMessageToSingleActorNoResponseStruct");
+
+        actor.Send(100);
+        actor.Send(100);
+        actor.Send(100);
+
+        await asx.Wait();
+
+        Assert.Equal(3, ((FireAndForgetActorStruct)actor.Runner.Actor!).GetMessages(100));
+    }
 }
