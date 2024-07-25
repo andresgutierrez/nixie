@@ -208,11 +208,9 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
 
         if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
         {
-            if (await actor.Value.runner.GracefulShutdown(maxWait))
-            {
-                actors.TryRemove(name, out _);
-                return true;
-            }
+            bool success = await actor.Value.runner.GracefulShutdown(maxWait);
+            actors.TryRemove(name, out _);
+            return success;
         }
 
         return true;
