@@ -369,7 +369,7 @@ public sealed class TestShutdown
 
         await asx.Wait();
 
-        Assert.Equal(1, ((ShutdownSlowActor)actor.Runner.Actor!).GetMessages());
+        Assert.Equal(2, ((ShutdownSlowActor)actor.Runner.Actor!).GetMessages());
 
         IActorRef<ShutdownSlowActor, string>? actor2 = asx.Get<ShutdownSlowActor, string>("my-actor");
         Assert.Null(actor2);
