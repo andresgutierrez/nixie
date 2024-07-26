@@ -1,9 +1,8 @@
 ﻿
-using Microsoft.Extensions.Logging;
 using Nixie.Actors;
 using Nixie.Utils;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace Nixie;
 
@@ -351,13 +350,29 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TActor"></typeparam>
     /// <typeparam name="TRequest"></typeparam>
     /// <typeparam name="TResponse"></typeparam>
-    /// <param name="name"></param>
+    /// <param name="actorRef"></param>
     /// <param name="maxWait"></param>
     /// <returns></returns>
     public async Task<bool> GracefulShutdownStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef, TimeSpan maxWait)
         where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
     {
         ActorRepositoryStruct<TActor, TRequest, TResponse> repository = GetRepositoryStruct<TActor, TRequest, TResponse>();
+
+        return await repository.GracefulShutdown(actorRef, maxWait);
+    }
+
+    /// <summary>
+    /// Shutdowns an actor by its reference
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>    
+    /// <param name="actorRef"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdownStruct<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef, TimeSpan maxWait)
+        where TActor : IActorStruct<TRequest> where TRequest : struct 
+    {
+        ActorRepositoryStruct<TActor, TRequest> repository = GetRepositoryStruct<TActor, TRequest>();
 
         return await repository.GracefulShutdown(actorRef, maxWait);
     }
@@ -567,6 +582,37 @@ public sealed class ActorSystem : IDisposable
         where TActor : IActor<TRequest> where TRequest : class
     {
         scheduler.ScheduleOnce(actorRef, request, delay);
+    }
+
+    /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public void ScheduleOnceStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        scheduler.ScheduleOnceStruct(actorRef, request, delay);
+    }
+
+    /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public void ScheduleOnceStruct<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        scheduler.ScheduleOnceStruct(actorRef, request, delay);
     }
 
     /// <summary>

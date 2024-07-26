@@ -239,4 +239,25 @@ public sealed class ActorRepositoryStruct<TActor, TRequest> : IActorRepositoryRu
 
         return true;
     }
+
+    /// <summary>
+    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="actorRef"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown(IActorRefStruct<TActor, TRequest> actorRef, TimeSpan maxWait)
+    {
+        string name = actorRef.Runner.Name;
+
+        if (actors.TryGetValue(name, out Lazy<(ActorRunnerStruct<TActor, TRequest> runner, ActorRefStruct<TActor, TRequest> actorRef)>? actor))
+        {
+            bool success = await actor.Value.runner.GracefulShutdown(maxWait);
+            actors.TryRemove(name, out _);
+            actorSystem.StopAllTimers(actor.Value.actorRef);
+            return success;
+        }
+
+        return true;
+    }
 }

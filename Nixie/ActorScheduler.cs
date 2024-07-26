@@ -150,6 +150,43 @@ public class ActorScheduler : IDisposable
     }
 
     /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public Timer ScheduleOnceStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        long seq = Interlocked.Increment(ref sequence);
+        Lazy<ConcurrentDictionary<long, Lazy<Timer>>> timers = onceTimers.GetOrAdd(actorRef, (object _) => new());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(seq, (long key) => new(() => ScheduleOnceTimerStruct(actorRef, request, delay, seq)));
+        return timer.Value;
+    }
+
+    /// <summary>
+    /// Schedules a message to be sent to an actor once after a specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public Timer ScheduleOnceStruct<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef, TRequest request, TimeSpan delay)
+        where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        long seq = Interlocked.Increment(ref sequence);
+        Lazy<ConcurrentDictionary<long, Lazy<Timer>>> timers = onceTimers.GetOrAdd(actorRef, (object _) => new());
+        Lazy<Timer> timer = timers.Value.GetOrAdd(seq, (long key) => new(() => ScheduleOnceTimerStruct(actorRef, request, delay, seq)));
+        return timer.Value;
+    }
+
+    /// <summary>
     /// Stops a periodic timer
     /// </summary>
     /// <param name="name"></param>
@@ -271,6 +308,18 @@ public class ActorScheduler : IDisposable
 
     private Timer ScheduleOnceTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan delay, long random)
         where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
+    {
+        return new((state) => SendScheduledMessage(actorRef, request, random), null, delay, TimeSpan.Zero);
+    }
+
+    private Timer ScheduleOnceTimerStruct<TActor, TRequest>(IActorRefStruct<TActor, TRequest> actorRef, TRequest request, TimeSpan delay, long random)
+       where TActor : IActorStruct<TRequest> where TRequest : struct
+    {
+        return new((state) => SendScheduledMessage(actorRef, request, random), null, delay, TimeSpan.Zero);
+    }
+
+    private Timer ScheduleOnceTimerStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef, TRequest request, TimeSpan delay, long random)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
     {
         return new((state) => SendScheduledMessage(actorRef, request, random), null, delay, TimeSpan.Zero);
     }
