@@ -1,6 +1,10 @@
 # Nixie
 
-A Lightweight Actor Model Implementation for C#/.NET [![Run Tests](https://github.com/andresgutierrez/nixie/actions/workflows/run-tests.yml/badge.svg)](https://github.com/andresgutierrez/nixie/actions/workflows/run-tests.yml)
+A Lightweight Actor Model Implementation for C#/.NET 
+
+[![Run Tests](https://github.com/andresgutierrez/nixie/actions/workflows/run-tests.yml/badge.svg)](https://github.com/andresgutierrez/nixie/actions/workflows/run-tests.yml)
+[![NuGet](https://img.shields.io/nuget/v/Nixie.svg?style=flat-square)](https://www.nuget.org/packages/Nixie)
+[![Nuget](https://img.shields.io/nuget/dt/Nixie)](https://www.nuget.org/packages/Nixie)
 
 ## Overview
 
@@ -82,7 +86,7 @@ greeter.Send(new GreetMessage("Hello, Nixie!"));
 
 ## Contribution
 
-Nixie is an open-source project, and contributions are heartily welcomed! Whether you are looking to fix bugs, add new features, or improve documentation, your efforts and contributions will be appreciated. Check out the CONTRIBUTING.md file for guidelines on how to get started with contributing to Nixie.
+Nixie is an open-source project, and contributions are heartily welcomed! Whether you are looking to fix bugs, add new features, or improve documentation, your efforts and contributions will be appreciated. Check out the [CONTRIBUTING](CONTRIBUTING.md) file for guidelines on how to get started with contributing to Nixie.
 
 ## License
 
