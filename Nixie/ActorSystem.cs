@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.Extensions.Logging;
 using Nixie.Actors;
+using Nixie.Utils;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
@@ -171,35 +172,7 @@ public sealed class ActorSystem : IDisposable
         ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
 
         return repository.Shutdown(name);
-    }
-    
-    /// <summary>
-    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
-    /// </summary>
-    /// /// <param name="maxWait"></param>
-    /// <param name="maxWait"></param>
-    /// <returns></returns>
-    public async Task<bool> GracefulShutdown<TActor, TRequest>(string name, TimeSpan maxWait) where TActor : IActor<TRequest>
-        where TRequest : class
-    {
-        ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
-
-        return await repository.GracefulShutdown(name, maxWait);
-    }
-
-    /// <summary>
-    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
-    /// </summary>
-    /// /// <param name="maxWait"></param>
-    /// <param name="maxWait"></param>
-    /// <returns></returns>
-    public async Task<bool> GracefulShutdown<TActor, TRequest, TResponse>(string name, TimeSpan maxWait) where TActor : IActor<TRequest, TResponse>
-        where TRequest : class where TResponse : class
-    {
-        ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
-
-        return await repository.GracefulShutdown(name, maxWait);
-    }
+    }    
 
     /// <summary>
     /// Shutdowns an actor by its reference
@@ -241,6 +214,22 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="name"></param>
     /// <returns></returns>
+    public bool Shutdown<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
+
+        return repository.Shutdown(actorRef);
+    }
+
+    /// <summary>
+    /// Shutdowns an actor by its reference
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="name"></param>
+    /// <returns></returns>
     public bool ShutdownStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef)
         where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
     {
@@ -263,23 +252,7 @@ public sealed class ActorSystem : IDisposable
         ActorRepositoryStruct<TActor, TRequest> repository = GetRepositoryStruct<TActor, TRequest>();
 
         return repository.Shutdown(name);
-    }
-
-    /// <summary>
-    /// Shutdowns an actor by its reference
-    /// </summary>
-    /// <typeparam name="TActor"></typeparam>
-    /// <typeparam name="TRequest"></typeparam>
-    /// <typeparam name="TResponse"></typeparam>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public bool Shutdown<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef)
-        where TActor : IActor<TRequest> where TRequest : class
-    {
-        ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
-
-        return repository.Shutdown(actorRef);
-    }
+    }    
 
     /// <summary>
     /// Shutdowns an actor by its reference
@@ -295,6 +268,98 @@ public sealed class ActorSystem : IDisposable
         ActorRepositoryStruct<TActor, TRequest> repository = GetRepositoryStruct<TActor, TRequest>();
 
         return repository.Shutdown(actorRef);
+    }
+
+    /// <summary>
+    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown<TActor, TRequest>(string name, TimeSpan maxWait) where TActor : IActor<TRequest>
+        where TRequest : class
+    {
+        ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
+
+        return await repository.GracefulShutdown(name, maxWait);
+    }
+
+    /// <summary>
+    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown<TActor, TRequest, TResponse>(string name, TimeSpan maxWait) where TActor : IActor<TRequest, TResponse>
+        where TRequest : class where TResponse : class
+    {
+        ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
+
+        return await repository.GracefulShutdown(name, maxWait);
+    }
+    
+    /// <summary>
+    /// Shutdowns an actor by its reference
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>    
+    /// <param name="name"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TimeSpan maxWait)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        ActorRepository<TActor, TRequest> repository = GetRepository<TActor, TRequest>();
+
+        return await repository.GracefulShutdown(actorRef, maxWait);
+    }
+
+    /// <summary>
+    /// Shutdowns an actor by its reference
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdown<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TimeSpan maxWait)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+    {
+        ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
+
+        return await repository.GracefulShutdown(actorRef, maxWait);
+    }
+
+    /// <summary>
+    /// Tries to shutdown an actor by its name and returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdownStruct<TActor, TRequest>(string name, TimeSpan maxWait) where TActor : IActorStruct<TRequest>
+        where TRequest : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest> repository = GetRepositoryStruct<TActor, TRequest>();
+
+        return await repository.GracefulShutdown(name, maxWait);
+    }
+
+    /// <summary>
+    /// Shutdowns an actor by its reference
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async Task<bool> GracefulShutdownStruct<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef, TimeSpan maxWait)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        ActorRepositoryStruct<TActor, TRequest, TResponse> repository = GetRepositoryStruct<TActor, TRequest, TResponse>();
+
+        return await repository.GracefulShutdown(actorRef, maxWait);
     }
 
     /// <summary>
@@ -564,12 +629,25 @@ public sealed class ActorSystem : IDisposable
     }
 
     /// <summary>
+    /// Stops all timers running or scheduled for the specified actor.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    public void StopAllTimers<TActor, TRequest, TResponse>(IActorRefStruct<TActor, TRequest, TResponse> actorRef)
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+    {
+        scheduler.StopAllTimers(actorRef);
+    }
+
+    /// <summary>
     /// Waits for all the actors in the system to finish processing their messages.
     /// </summary>
     /// <returns></returns>
     public async Task Wait()
     {
-        Stopwatch stopWatch = new();
+        ValueStopwatch stopWatch = ValueStopwatch.StartNew();
         string? pendingActorName = null, processingName = null;
 
         while (true)
@@ -594,7 +672,7 @@ public sealed class ActorSystem : IDisposable
             if (completed)
                 break;
 
-            if (stopWatch.ElapsedMilliseconds > 10000)
+            if (stopWatch.GetElapsedMilliseconds() > 11000)
             {
                 logger?.LogWarning("Timeout waiting for actor {PendingActorName}/{ProcessingName}", pendingActorName, processingName);
                 break;

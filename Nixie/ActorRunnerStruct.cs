@@ -17,6 +17,8 @@ public sealed class ActorRunnerStruct<TActor, TRequest> where TActor : IActorStr
 
     private readonly ConcurrentQueue<ActorMessage<TRequest>> inbox = new();
 
+    private TaskCompletionSource? gracefulShutdown;
+
     private int processing = 1;
 
     private int shutdown = 1;
@@ -96,6 +98,34 @@ public sealed class ActorRunnerStruct<TActor, TRequest> where TActor : IActorStr
     }
 
     /// <summary>
+    /// Tries to shutdown the actor returns a task whose result confirms shutdown within the specified timespan
+    /// </summary>
+    /// <param name="maxWait"></param>
+    /// <returns></returns>
+    public async ValueTask<bool> GracefulShutdown(TimeSpan maxWait)
+    {
+        if (inbox.IsEmpty)
+            return Shutdown();
+
+        if (gracefulShutdown is not null)
+            return false;
+
+        gracefulShutdown = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Task timeout = Task.Delay(maxWait);
+
+        Task completed = await Task.WhenAny(
+            timeout,
+            gracefulShutdown.Task
+        );
+
+        if (completed == timeout)
+            Shutdown();
+
+        return completed != timeout;
+    }
+
+    /// <summary>
     /// Enqueues a message to the actor and tries to deliver it.
     /// The request/response type actors use an object to assign the response once completed.    
     /// </summary>
@@ -105,7 +135,10 @@ public sealed class ActorRunnerStruct<TActor, TRequest> where TActor : IActorStr
         try
         {
             if (Actor is null || ActorContext is null || shutdown == 0)
+            {
+                gracefulShutdown?.SetResult();
                 return;
+            }
 
             ActorContext.Runner = this;
 
@@ -134,6 +167,8 @@ public sealed class ActorRunnerStruct<TActor, TRequest> where TActor : IActorStr
                     }
                 }
             } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
+
+            gracefulShutdown?.SetResult();
         }
         catch (Exception ex)
         {

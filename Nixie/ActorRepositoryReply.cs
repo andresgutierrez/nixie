@@ -189,6 +189,29 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
             if (actor.Value.runner.Shutdown())
             {
                 actors.TryRemove(name, out _);
+                actorSystem.StopAllTimers(actor.Value.actorRef);
+                return true;
+            }
+        }
+
+        return true;
+    }    
+
+    /// <summary>
+    /// Shutdowns an actor by its reference
+    /// </summary>
+    /// <param name="actorRef"></param>
+    /// <returns></returns>
+    public bool Shutdown(IActorRef<TActor, TRequest, TResponse> actorRef)
+    {
+        string name = actorRef.Runner.Name;
+
+        if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
+        {
+            if (actor.Value.runner.Shutdown())
+            {
+                actors.TryRemove(name, out _);
+                actorSystem.StopAllTimers(actor.Value.actorRef);
                 return true;
             }
         }
@@ -210,28 +233,8 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         {
             bool success = await actor.Value.runner.GracefulShutdown(maxWait);
             actors.TryRemove(name, out _);
+            actorSystem.StopAllTimers(actor.Value.actorRef);
             return success;
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Shutdowns an actor by its reference
-    /// </summary>
-    /// <param name="actorRef"></param>
-    /// <returns></returns>
-    public bool Shutdown(IActorRef<TActor, TRequest, TResponse> actorRef)
-    {
-        string name = actorRef.Runner.Name;
-
-        if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
-        {
-            if (actor.Value.runner.Shutdown())
-            {
-                actors.TryRemove(name, out _);
-                return true;
-            }
         }
 
         return true;
@@ -249,11 +252,10 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
 
         if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
         {
-            if (await actor.Value.runner.GracefulShutdown(maxWait))
-            {
-                actors.TryRemove(name, out _);
-                return true;
-            }
+            bool success = await actor.Value.runner.GracefulShutdown(maxWait);            
+            actors.TryRemove(name, out _);
+            actorSystem.StopAllTimers(actor.Value.actorRef);
+            return success;            
         }
 
         return true;
