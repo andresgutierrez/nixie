@@ -159,7 +159,7 @@ public static class ActorSystemExtensions
     }
 
     /// <summary>
-    /// Creates a Round-Robin router specifying number of instances
+    /// Creates a Consistent Hash router specifying name and number of instances
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
     /// <typeparam name="TRequest"></typeparam>
