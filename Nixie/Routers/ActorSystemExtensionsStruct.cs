@@ -226,6 +226,27 @@ public static class ActorSystemExtensionsStruct
     {
         return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest>(null, instances);
     }
+     
+    /// <summary>
+    /// Creates a Consistent Hash router specifying name and a list of instances
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorSystem"></param>
+    /// <param name="name"></param>
+    /// <param name="instances"></param>
+    /// <returns></returns>
+    public static IActorRefStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest>
+        CreateConsistentHashRouterStruct<TActor, TRequest>(
+            this ActorSystem actorSystem,
+            string name,
+            List<IActorRefStruct<TActor, TRequest>> instances
+        )
+        where TActor : IActorStruct<TRequest> where TRequest : struct, IConsistentHashable
+    {
+        return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest>(name, instances);
+    }
 
     /// <summary>
     /// Creates a Consistent Hash router specifying name and number of instances
