@@ -65,6 +65,7 @@ public class RoundRobinActor<TActor, TRequest, TResponse> : IActor<TRequest, TRe
         IActorRef<TActor, TRequest, TResponse> instance = instances[position % instances.Count];
         context.ByPassReply = true; // Marks the response to be bypassed so other actor can reply
         instance.Send(message, context.Reply);
+        
         return Task.FromResult((TResponse?)default);
     }
 }
