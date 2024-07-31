@@ -1,4 +1,3 @@
-﻿
 namespace Nixie.Routers;
 
 /// <summary>
@@ -12,31 +11,31 @@ namespace Nixie.Routers;
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
-public class RoundRobinActor<TActor, TRequest, TResponse> : IActor<TRequest, TResponse>
-    where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
+public class RoundRobinActorStruct<TActor, TRequest, TResponse> : IActorStruct<TRequest, TResponse>
+    where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
 {
     private int position = -1;
 
-    private readonly IActorContext<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse> context;
+    private readonly IActorContextStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse> context;
 
-    private readonly List<IActorRef<TActor, TRequest, TResponse>> instances = new();
+    private readonly List<IActorRefStruct<TActor, TRequest, TResponse>> instances = new();
 
     /// <summary>
     /// Returns the current list of instances
     /// </summary>
-    public List<IActorRef<TActor, TRequest, TResponse>> Instances => instances;
+    public List<IActorRefStruct<TActor, TRequest, TResponse>> Instances => instances;
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="context"></param>
     /// <param name="numberInstances"></param>
-    public RoundRobinActor(IActorContext<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse> context, int numberInstances)
+    public RoundRobinActorStruct(IActorContextStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse> context, int numberInstances)
     {
         this.context = context;
 
         for (int i = 0; i < numberInstances; i++)
-            instances.Add(context.ActorSystem.Spawn<TActor, TRequest, TResponse>());
+            instances.Add(context.ActorSystem.SpawnStruct<TActor, TRequest, TResponse>());
     }
 
     /// <summary>
@@ -44,7 +43,7 @@ public class RoundRobinActor<TActor, TRequest, TResponse> : IActor<TRequest, TRe
     /// </summary>
     /// <param name="context"></param>
     /// <param name="instances"></param>
-    public RoundRobinActor(IActorContext<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse> context, List<IActorRef<TActor, TRequest, TResponse>> instances)
+    public RoundRobinActorStruct(IActorContextStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse> context, List<IActorRefStruct<TActor, TRequest, TResponse>> instances)
     {
         this.context = context;
         this.instances = instances;
@@ -55,17 +54,16 @@ public class RoundRobinActor<TActor, TRequest, TResponse> : IActor<TRequest, TRe
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
-    public Task<TResponse?> Receive(TRequest message)
+    public Task<TResponse> Receive(TRequest message)
     {
         if ((position + 1) >= int.MaxValue)
             position = 0;
         else
             position++;
 
-        IActorRef<TActor, TRequest, TResponse> instance = instances[position % instances.Count];
+        IActorRefStruct<TActor, TRequest, TResponse> instance = instances[position % instances.Count];
         context.ByPassReply = true; // Marks the response to be bypassed so other actor can reply
         instance.Send(message, context.Reply);
-        
-        return Task.FromResult((TResponse?)default);
+        return Task.FromResult((TResponse)default);
     }
 }

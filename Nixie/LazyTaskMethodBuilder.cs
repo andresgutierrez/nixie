@@ -7,7 +7,7 @@ namespace Nixie;
 
 public class LazyTaskMethodBuilder<T>
 {
-    public LazyTaskMethodBuilder() => Task = new LazyTask<T>();
+    public LazyTaskMethodBuilder() => Task = new();
 
     public static LazyTaskMethodBuilder<T> Create() => new();
 

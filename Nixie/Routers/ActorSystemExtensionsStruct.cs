@@ -1,10 +1,7 @@
-﻿
+
 namespace Nixie.Routers;
 
-/// <summary>
-/// Extensions to create routers in a friendly way
-/// </summary>
-public static class ActorSystemExtensions
+public static class ActorSystemExtensionsStruct
 {
     /// <summary>
     /// Creates a Round-Robin router specifying name and number of instances
@@ -15,14 +12,14 @@ public static class ActorSystemExtensions
     /// <param name="name"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<RoundRobinActor<TActor, TRequest>, TRequest> CreateRoundRobinRouter<TActor, TRequest>(
+    public static IActorRefStruct<RoundRobinActorStruct<TActor, TRequest>, TRequest> CreateRoundRobinRouterStruct<TActor, TRequest>(
         this ActorSystem actorSystem,
         string name,
         int instances
     )
-        where TActor : IActor<TRequest> where TRequest : class
+        where TActor : IActorStruct<TRequest> where TRequest : struct
     {        
-         return actorSystem.Spawn<RoundRobinActor<TActor, TRequest>, TRequest>(name, instances);
+         return actorSystem.SpawnStruct<RoundRobinActorStruct<TActor, TRequest>, TRequest>(name, instances);
     }
 
     /// <summary>
@@ -33,13 +30,13 @@ public static class ActorSystemExtensions
     /// <param name="actorSystem"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<RoundRobinActor<TActor, TRequest>, TRequest> CreateRoundRobinRouter<TActor, TRequest>(
+    public static IActorRefStruct<RoundRobinActorStruct<TActor, TRequest>, TRequest> CreateRoundRobinRouterStruct<TActor, TRequest>(
         this ActorSystem actorSystem,        
         int instances
     )
-        where TActor : IActor<TRequest> where TRequest : class
+        where TActor : IActorStruct<TRequest> where TRequest : struct
     {
-        return actorSystem.Spawn<RoundRobinActor<TActor, TRequest>, TRequest>(null, instances);
+        return actorSystem.SpawnStruct<RoundRobinActorStruct<TActor, TRequest>, TRequest>(null, instances);
     }
 
     /// <summary>
@@ -51,14 +48,14 @@ public static class ActorSystemExtensions
     /// <param name="name"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<RoundRobinActor<TActor, TRequest>, TRequest> CreateRoundRobinRouter<TActor, TRequest>(
+    public static IActorRefStruct<RoundRobinActorStruct<TActor, TRequest>, TRequest> CreateRoundRobinRouterStruct<TActor, TRequest>(
         this ActorSystem actorSystem,
         string name,
-        List<IActorRef<TActor, TRequest>> instances
+        List<IActorRefStruct<TActor, TRequest>> instances
     )
-        where TActor : IActor<TRequest> where TRequest : class
+        where TActor : IActorStruct<TRequest> where TRequest : struct
     {
-        return actorSystem.Spawn<RoundRobinActor<TActor, TRequest>, TRequest>(name, instances);
+        return actorSystem.SpawnStruct<RoundRobinActorStruct<TActor, TRequest>, TRequest>(name, instances);
     }
 
     /// <summary>
@@ -69,13 +66,13 @@ public static class ActorSystemExtensions
     /// <param name="actorSystem"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<RoundRobinActor<TActor, TRequest>, TRequest> CreateRoundRobinRouter<TActor, TRequest>(
+    public static IActorRefStruct<RoundRobinActorStruct<TActor, TRequest>, TRequest> CreateRoundRobinRouterStruct<TActor, TRequest>(
         this ActorSystem actorSystem,
-        List<IActorRef<TActor, TRequest>> instances
+        List<IActorRefStruct<TActor, TRequest>> instances
     )
-        where TActor : IActor<TRequest> where TRequest : class
+        where TActor : IActorStruct<TRequest> where TRequest : struct
     {
-        return actorSystem.Spawn<RoundRobinActor<TActor, TRequest>, TRequest>(null, instances);
+        return actorSystem.SpawnStruct<RoundRobinActorStruct<TActor, TRequest>, TRequest>(null, instances);
     }
 
     /// <summary>
@@ -88,15 +85,15 @@ public static class ActorSystemExtensions
     /// <param name="name"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse>
-        CreateRoundRobinRouter<TActor, TRequest, TResponse>(
+    public static IActorRefStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>
+        CreateRoundRobinRouterStruct<TActor, TRequest, TResponse>(
             this ActorSystem actorSystem,
             string name,
             int instances
         )
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
     {
-        return actorSystem.Spawn<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse>(name, instances);
+        return actorSystem.SpawnStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>(name, instances);
     }
 
     /// <summary>
@@ -108,14 +105,14 @@ public static class ActorSystemExtensions
     /// <param name="actorSystem"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse>
+    public static IActorRefStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>
         CreateRoundRobinRouter<TActor, TRequest, TResponse>(
             this ActorSystem actorSystem,
             int instances
         )
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
     {
-        return actorSystem.Spawn<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse>(null, instances);
+        return actorSystem.SpawnStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>(null, instances);
     }
 
     /// <summary>
@@ -128,15 +125,15 @@ public static class ActorSystemExtensions
     /// <param name="name"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse>
-        CreateRoundRobinRouter<TActor, TRequest, TResponse>(
+    public static IActorRefStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>
+        CreateRoundRobinRouterStruct<TActor, TRequest, TResponse>(
             this ActorSystem actorSystem,
             string name,
-            List<IActorRef<TActor, TRequest, TResponse>> instances
+            List<IActorRefStruct<TActor, TRequest, TResponse>> instances
         )
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
     {
-        return actorSystem.Spawn<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse>(name, instances);
+        return actorSystem.SpawnStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>(name, instances);
     }
 
     /// <summary>
@@ -148,16 +145,16 @@ public static class ActorSystemExtensions
     /// <param name="actorSystem"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse>
-        CreateRoundRobinRouter<TActor, TRequest, TResponse>(
+    public static IActorRefStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>
+        CreateRoundRobinRouterStruct<TActor, TRequest, TResponse>(
             this ActorSystem actorSystem,
-            List<IActorRef<TActor, TRequest, TResponse>> instances
+            List<IActorRefStruct<TActor, TRequest, TResponse>> instances
         )
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
     {
-        return actorSystem.Spawn<RoundRobinActor<TActor, TRequest, TResponse>, TRequest, TResponse>(null, instances);
+        return actorSystem.SpawnStruct<RoundRobinActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>(null, instances);
     }
-
+    
     /// <summary>
     /// Creates a Consistent Hash router specifying name and number of instances
     /// </summary>
@@ -167,16 +164,16 @@ public static class ActorSystemExtensions
     /// <param name="name"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<ConsistentHashActor<TActor, TRequest>, TRequest> CreateConsistentHashRouter<TActor, TRequest>(
+    public static IActorRefStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest> CreateConsistentHashRouterStruct<TActor, TRequest>(
         this ActorSystem actorSystem,
         string name,
         int instances
     )
-        where TActor : IActor<TRequest> where TRequest : class, IConsistentHashable
+        where TActor : IActorStruct<TRequest> where TRequest : struct, IConsistentHashable
     {
-        return actorSystem.Spawn<ConsistentHashActor<TActor, TRequest>, TRequest>(name, instances);
+        return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest>(name, instances);
     }
-
+    
     /// <summary>
     /// Creates a Consistent Hash router specifying name and number of instances
     /// </summary>
@@ -185,35 +182,35 @@ public static class ActorSystemExtensions
     /// <param name="actorSystem"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<ConsistentHashActor<TActor, TRequest>, TRequest> CreateConsistentHashRouter<TActor, TRequest>(
+    public static IActorRefStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest> CreateConsistentHashRouterStruct<TActor, TRequest>(
         this ActorSystem actorSystem,
         int instances
     )
-        where TActor : IActor<TRequest> where TRequest : class, IConsistentHashable
+        where TActor : IActorStruct<TRequest> where TRequest : struct, IConsistentHashable
     {
-        return actorSystem.Spawn<ConsistentHashActor<TActor, TRequest>, TRequest>(null, instances);
+        return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest>(null, instances);
     }
-
+    
     /// <summary>
-    /// Creates a Round-Robin router specifying a list of instances
+    /// Creates a Consistent Hash router specifying name and number of instances
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
     /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
     /// <param name="actorSystem"></param>
-    /// <param name="name"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<ConsistentHashActor<TActor, TRequest>, TRequest> CreateConsistentHashRouter<TActor, TRequest>(
-        this ActorSystem actorSystem,
-        string name,
-        List<IActorRef<TActor, TRequest>> instances
-    )
-        where TActor : IActor<TRequest> where TRequest : class, IConsistentHashable
+    public static IActorRefStruct<ConsistentHashActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>
+        CreateConsistentHashRouterStruct<TActor, TRequest, TResponse>(
+            this ActorSystem actorSystem,
+            int instances
+        )
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct, IConsistentHashable where TResponse : struct
     {
-        return actorSystem.Spawn<ConsistentHashActor<TActor, TRequest>, TRequest>(name, instances);
+        return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>(null, instances);
     }
-
-    /// <summary>
+    
+     /// <summary>
     /// Creates a Consistent Hash router specifying name and a list of instances
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
@@ -221,13 +218,34 @@ public static class ActorSystemExtensions
     /// <param name="actorSystem"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<ConsistentHashActor<TActor, TRequest>, TRequest> CreateConsistentHashRouter<TActor, TRequest>(
+    public static IActorRefStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest> CreateConsistentHashRouterStruct<TActor, TRequest>(
         this ActorSystem actorSystem,
-        List<IActorRef<TActor, TRequest>> instances
+        List<IActorRefStruct<TActor, TRequest>> instances
     )
-        where TActor : IActor<TRequest> where TRequest : class, IConsistentHashable
+        where TActor : IActorStruct<TRequest> where TRequest : struct, IConsistentHashable
     {
-        return actorSystem.Spawn<ConsistentHashActor<TActor, TRequest>, TRequest>(null, instances);
+        return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest>(null, instances);
+    }
+     
+    /// <summary>
+    /// Creates a Consistent Hash router specifying name and a list of instances
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorSystem"></param>
+    /// <param name="name"></param>
+    /// <param name="instances"></param>
+    /// <returns></returns>
+    public static IActorRefStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest>
+        CreateConsistentHashRouterStruct<TActor, TRequest>(
+            this ActorSystem actorSystem,
+            string name,
+            List<IActorRefStruct<TActor, TRequest>> instances
+        )
+        where TActor : IActorStruct<TRequest> where TRequest : struct, IConsistentHashable
+    {
+        return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest>, TRequest>(name, instances);
     }
 
     /// <summary>
@@ -240,34 +258,15 @@ public static class ActorSystemExtensions
     /// <param name="name"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<ConsistentHashActor<TActor, TRequest, TResponse>, TRequest, TResponse>
-        CreateConsistentHashRouter<TActor, TRequest, TResponse>(
+    public static IActorRefStruct<ConsistentHashActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>
+        CreateConsistentHashRouterStruct<TActor, TRequest, TResponse>(
             this ActorSystem actorSystem,
             string name,
             int instances
         )
-        where TActor : IActor<TRequest, TResponse> where TRequest : class, IConsistentHashable where TResponse : class
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct, IConsistentHashable where TResponse : struct
     {
-        return actorSystem.Spawn<ConsistentHashActor<TActor, TRequest, TResponse>, TRequest, TResponse>(name, instances);
-    }
-
-    /// <summary>
-    /// Creates a Consistent Hash router specifying name and number of instances
-    /// </summary>
-    /// <typeparam name="TActor"></typeparam>
-    /// <typeparam name="TRequest"></typeparam>
-    /// <typeparam name="TResponse"></typeparam>
-    /// <param name="actorSystem"></param>
-    /// <param name="instances"></param>
-    /// <returns></returns>
-    public static IActorRef<ConsistentHashActor<TActor, TRequest, TResponse>, TRequest, TResponse>
-        CreateConsistentHashRouter<TActor, TRequest, TResponse>(
-            this ActorSystem actorSystem,
-            int instances
-        )
-        where TActor : IActor<TRequest, TResponse> where TRequest : class, IConsistentHashable where TResponse : class
-    {
-        return actorSystem.Spawn<ConsistentHashActor<TActor, TRequest, TResponse>, TRequest, TResponse>(null, instances);
+        return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>(name, instances);
     }
 
     /// <summary>
@@ -280,15 +279,15 @@ public static class ActorSystemExtensions
     /// <param name="name"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<ConsistentHashActor<TActor, TRequest, TResponse>, TRequest, TResponse>
-        CreateConsistentHashRouter<TActor, TRequest, TResponse>(
+    public static IActorRefStruct<ConsistentHashActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>
+        CreateConsistentHashRouterStruct<TActor, TRequest, TResponse>(
             this ActorSystem actorSystem,
             string name,
-            List<IActorRef<TActor, TRequest, TResponse>> instances
+            List<IActorRefStruct<TActor, TRequest, TResponse>> instances
         )
-        where TActor : IActor<TRequest, TResponse> where TRequest : class, IConsistentHashable where TResponse : class
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct, IConsistentHashable where TResponse : struct
     {
-        return actorSystem.Spawn<ConsistentHashActor<TActor, TRequest, TResponse>, TRequest, TResponse>(name, instances);
+        return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>(name, instances);
     }
 
     /// <summary>
@@ -300,13 +299,13 @@ public static class ActorSystemExtensions
     /// <param name="actorSystem"></param>
     /// <param name="instances"></param>
     /// <returns></returns>
-    public static IActorRef<ConsistentHashActor<TActor, TRequest, TResponse>, TRequest, TResponse>
-        CreateConsistentHashRouter<TActor, TRequest, TResponse>(
+    public static IActorRefStruct<ConsistentHashActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>
+        CreateConsistentHashRouterStruct<TActor, TRequest, TResponse>(
             this ActorSystem actorSystem,
-            List<IActorRef<TActor, TRequest, TResponse>> instances
+            List<IActorRefStruct<TActor, TRequest, TResponse>> instances
         )
-        where TActor : IActor<TRequest, TResponse> where TRequest : class, IConsistentHashable where TResponse : class
+        where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct, IConsistentHashable where TResponse : struct
     {
-        return actorSystem.Spawn<ConsistentHashActor<TActor, TRequest, TResponse>, TRequest, TResponse>(null, instances);
+        return actorSystem.SpawnStruct<ConsistentHashActorStruct<TActor, TRequest, TResponse>, TRequest, TResponse>(null, instances);
     }
 }

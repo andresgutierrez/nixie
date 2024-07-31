@@ -35,6 +35,35 @@ public sealed class TestRouters
             Assert.Equal(1, routeeActor.GetMessages());
         }
     }
+    
+    [Fact]
+    public async Task TestCreateRoundRobinRouterStruct()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefStruct<RoundRobinActorStruct<RouteeActorStruct, RouterMessageStruct>, RouterMessageStruct> router =
+            asx.SpawnStruct<RoundRobinActorStruct<RouteeActorStruct, RouterMessageStruct>, RouterMessageStruct>("my-router", 5);
+
+        router.Send(new RouterMessageStruct(RouterMessageType.Route, "aaa"));
+        router.Send(new RouterMessageStruct(RouterMessageType.Route, "bbb"));
+        router.Send(new RouterMessageStruct(RouterMessageType.Route, "ccc"));
+        router.Send(new RouterMessageStruct(RouterMessageType.Route, "ddd"));
+        router.Send(new RouterMessageStruct(RouterMessageType.Route, "eee"));
+
+        await asx.Wait();
+
+        Assert.IsAssignableFrom<RoundRobinActorStruct<RouteeActorStruct, RouterMessageStruct>>(router.Runner.Actor);
+
+        RoundRobinActorStruct<RouteeActorStruct, RouterMessageStruct> routerActor = (RoundRobinActorStruct<RouteeActorStruct, RouterMessageStruct>)router.Runner.Actor!;
+
+        foreach (IActorRefStruct<RouteeActorStruct, RouterMessageStruct> routee in routerActor.Instances)
+        {
+            Assert.IsAssignableFrom<RouteeActorStruct>(routee.Runner.Actor);
+
+            RouteeActorStruct routeeActor = (RouteeActorStruct)routee.Runner.Actor!;
+            Assert.Equal(1, routeeActor.GetMessages());
+        }
+    }
 
     [Fact]
     public async Task TestCreateRoundRobinRouterExt()

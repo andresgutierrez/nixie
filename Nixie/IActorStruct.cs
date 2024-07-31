@@ -6,7 +6,7 @@ namespace Nixie;
 /// This actor type supports struct request messages.
 /// </summary>
 /// <typeparam name="TRequest"></typeparam>
-public interface IActorStruct<TRequest> where TRequest : struct
+public interface IActorStruct<in TRequest> where TRequest : struct
 {
     public Task Receive(TRequest message);
 }

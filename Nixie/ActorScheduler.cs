@@ -11,14 +11,17 @@ public class ActorScheduler : IDisposable
 {
     private static int sequence;
 
+    private readonly ActorSystem actorSystem;
+
     private readonly ILogger? logger;
 
     private readonly ConcurrentDictionary<object, Lazy<ConcurrentDictionary<long, Lazy<Timer>>>> onceTimers = new();
 
     private readonly ConcurrentDictionary<object, Lazy<ConcurrentDictionary<string, Lazy<Timer>>>> periodicTimers = new();
 
-    public ActorScheduler(ILogger? logger)
+    public ActorScheduler(ActorSystem actorSystem, ILogger? logger)
     {
+        this.actorSystem = actorSystem;
         this.logger = logger;
     }
 
@@ -184,6 +187,36 @@ public class ActorScheduler : IDisposable
         Lazy<ConcurrentDictionary<long, Lazy<Timer>>> timers = onceTimers.GetOrAdd(actorRef, (object _) => new());
         Lazy<Timer> timer = timers.Value.GetOrAdd(seq, (long key) => new(() => ScheduleOnceTimerStruct(actorRef, request, delay, seq)));
         return timer.Value;
+    }
+    
+    /// <summary>
+    /// Schedule an actor to be terminated after the specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public Timer ScheduleShutdown<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TimeSpan delay)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
+    {
+        return new((state) => actorSystem.Shutdown(actorRef), null, delay, TimeSpan.Zero);
+    }
+    
+    /// <summary>
+    /// Schedule an actor to be terminated after the specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public Timer ScheduleShutdown<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TimeSpan delay)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        return new((state) => actorSystem.Shutdown(actorRef), null, delay, TimeSpan.Zero);
     }
 
     /// <summary>

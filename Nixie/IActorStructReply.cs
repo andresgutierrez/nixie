@@ -6,7 +6,7 @@ namespace Nixie;
 /// </summary>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
-public interface IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+public interface IActorStruct<in TRequest, TResponse> where TRequest : struct where TResponse : struct
 {
     /// <summary>
     /// Passes a message to the actor and returns a response.

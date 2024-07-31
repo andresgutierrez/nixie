@@ -38,7 +38,7 @@ public sealed class ActorSystem : IDisposable
     {
         this.serviceProvider = serviceProvider;
         this.logger = logger;
-        this.scheduler = new(logger);
+        this.scheduler = new(this, logger);
 
         Nobody = Spawn<NobodyActor, object>();
     }
@@ -182,7 +182,7 @@ public sealed class ActorSystem : IDisposable
     /// <param name="name"></param>
     /// <returns></returns>
     public bool Shutdown<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         ActorRepository<TActor, TRequest, TResponse> repository = GetRepository<TActor, TRequest, TResponse>();
 
@@ -613,6 +613,38 @@ public sealed class ActorSystem : IDisposable
         where TActor : IActorStruct<TRequest> where TRequest : struct
     {
         scheduler.ScheduleOnceStruct(actorRef, request, delay);
+    }
+    
+    /// <summary>
+    /// Schedule an actor to be terminated after the specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public void ScheduleShutdown<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, TimeSpan delay)
+        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
+    {
+        scheduler.ScheduleShutdown(actorRef, delay);
+    }
+    
+    /// <summary>
+    /// Schedule an actor to be terminated after the specified delay.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="actorRef"></param>
+    /// <param name="request"></param>
+    /// <param name="delay"></param>
+    /// <returns></returns>
+    public void ScheduleShutdown<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, TimeSpan delay)
+        where TActor : IActor<TRequest> where TRequest : class
+    {
+        scheduler.ScheduleShutdown(actorRef, delay);
     }
 
     /// <summary>

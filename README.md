@@ -48,7 +48,7 @@ To install Nixie into your C#/.NET project, you can use the .NET CLI or the NuGe
 #### Using .NET CLI
 
 ```shell
-dotnet add package Nixie --version 1.0.3
+dotnet add package Nixie --version 1.0.6
 ```
 
 ### Using NuGet Package Manager
@@ -56,7 +56,7 @@ dotnet add package Nixie --version 1.0.3
 Search for Nixie and install it from the NuGet package manager UI, or use the Package Manager Console:
 
 ```shell
-Install-Package Nixie -Version 1.0.3
+Install-Package Nixie -Version 1.0.6
 ```
 
 ## Usage
