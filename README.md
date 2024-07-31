@@ -10,12 +10,25 @@ A Lightweight Actor Model Implementation for C#/.NET
 
 Nixie is a lightweight, high-performance implementation of the [actor model](https://en.wikipedia.org/wiki/Actor_model) tailored for the latest versions of C#/.NET. Developed with a focus on type safety, Nixie provides strongly-typed actors and takes full advantage of nullable support, thereby promoting a reduced error-prone codebase and bolstering performance. Built atop the [Task Parallel Library (TPL)](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-parallel-library-tpl) provided by .NET, it manages the lifecycle of actors diligently, ensuring a seamless and efficient concurrent programming experience.
 
-## Features
+### Advantages of using Nixie Actor/Model vs. Traditional Threads Programming
+
+1. **Simplified Concurrency Model:**: Nixie abstracts away low-level thread management, providing a higher-level concurrency model that is easier to reason about and manage.
+2. **Improved Scalability:** Actor systems can efficiently scale across multiple CPU cores and even multiple machines, whereas managing threads for scalability can be complex and error-prone.
+3. **Enhanced Fault Tolerance:** Nixie include built-in fault tolerance mechanisms, such as supervision strategies, which help to recover from failures gracefully.
+4. **Isolation and Encapsulation:**: Each actor encapsulates its state and behavior, reducing the risk of shared state conflicts and making the system more modular and easier to maintain.
+5. **Simplified Error Handling:** Actors can handle errors locally and propagate them in a controlled manner, improving the robustness and reliability of the application.
+6. **Natural Asynchronous Programming:** Actor models promote asynchronous message passing, which can lead to more responsive applications compared to blocking thread-based models.
+7. **Reduced Complexity:** Traditional thread programming can be complex due to the need for synchronization primitives (locks, semaphores, etc.), whereas actor models eliminate the need for these by design.
+8. **Concurrency Safety:** The message-passing nature of actor models inherently avoids many concurrency issues, such as deadlocks and race conditions, which are common in traditional threading.
+9. **Event-Driven Architecture:** Actor models align well with event-driven architectures, enabling more reactive and event-driven design patterns that are suited for modern applications.
+10. **Easier Maintenance:** With clear boundaries and less shared state, actor-based systems are generally easier to maintain and evolve over time compared to traditional thread-based systems.
+
+## Features of Nixie
 
 - **Strongly-Typed Actors:** Ensuring that your actor interactions are type-safe and as per expectations. High use of [generics](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics) to ensure that errors related to type mismatches are caught at compile time rather than at runtime. This reduces the risk of runtime exceptions and makes the code more robust.
 - **Nullable Support:** Full support for [nullability](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types) in line with the latest C# features, ensuring your code is robust and safeguarded against null reference issues.
 - **Lifecycle Management:** Nixie handles the meticulous management of actor lifecycle, allowing developers to focus on implementing logic.
-- **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nixie ensures that your actor systems are both scalable and performant. Additionally the use of Generics eliminate the need for boxing and unboxing when working with value types, which can improve performance. Boxing is the process of converting a value type to an object type, and unboxing is the reverse.
+- **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nixie ensures that your actor systems are both scalable and performant. Additionally the use of Generics eliminate the need for boxing and unboxing when working with value types, which can improve performance (Boxing is the process of converting a value type to an object type, and unboxing is the reverse).
 - **Less Error Prone:** The strongly-typed nature and nullability checks inherently make your actor system more reliable and resilient.
 - **Built on TPL:** Make the most out of the robust, scalable, and performant asynchronous programming features offered by TPL.
 - **Multi-Threading:** To increase throughput, Nixie makes use of thread-safe structures that avoid locks wherever possible and use fine-grained locking where locks are necessary. Abstracting the complexities of multithreaded programming into an API that is easy to use and understand.
