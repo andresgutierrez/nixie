@@ -1,4 +1,6 @@
 ﻿
+using DotNext.Threading.Tasks;
+
 namespace Nixie;
 
 /// <summary>
@@ -62,9 +64,9 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     /// <returns></returns>    
     public async Task<TResponse> Ask(TRequest message)
     {
-        TaskCompletionSource<TResponse> promise = runner.SendAndTryDeliver(message, null, null);
+        ValueTaskCompletionSource<TResponse> promise = runner.SendAndTryDeliver(message, null, null);
 
-        return await promise.Task;
+        return await promise.CreateTask(TimeSpan.FromHours(1), default);
     }
 
     /// <summary>
@@ -79,10 +81,10 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     {
         using CancellationTokenSource timeoutCancellationTokenSource = new();
 
-        TaskCompletionSource<TResponse> completionSource = runner.SendAndTryDeliver(message, null, null);
+        ValueTaskCompletionSource<TResponse> completionSource = runner.SendAndTryDeliver(message, null, null);
 
-        Task<TResponse> task = completionSource.Task;
-
+        Task<TResponse> task = completionSource.CreateTask(TimeSpan.FromHours(1), default).AsTask();
+        
         Task completedTask = await Task.WhenAny(
             task,
             Task.Delay(timeout, timeoutCancellationTokenSource.Token)
@@ -90,7 +92,7 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
 
         if (completedTask == task)
         {
-            timeoutCancellationTokenSource.Cancel();
+            await timeoutCancellationTokenSource.CancelAsync();
             return await task;
         }
 
@@ -105,9 +107,9 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     /// <returns></returns>
     public async Task<TResponse> Ask(TRequest message, IGenericActorRef sender)
     {
-        TaskCompletionSource<TResponse> promise = runner.SendAndTryDeliver(message, sender, null);
+        ValueTaskCompletionSource<TResponse> promise = runner.SendAndTryDeliver(message, sender, null);
 
-        return await promise.Task;
+        return await promise.CreateTask(TimeSpan.FromHours(1), default);
     }
 
     /// <summary>
@@ -123,9 +125,9 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     {
         using CancellationTokenSource timeoutCancellationTokenSource = new();
 
-        TaskCompletionSource<TResponse> completionSource = runner.SendAndTryDeliver(message, sender, null);
+        ValueTaskCompletionSource<TResponse> completionSource = runner.SendAndTryDeliver(message, sender, null);
 
-        Task<TResponse> task = completionSource.Task;
+        Task<TResponse> task = completionSource.CreateTask(TimeSpan.Zero, default).AsTask();
 
         Task completedTask = await Task.WhenAny(
             task,
@@ -134,7 +136,7 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
 
         if (completedTask == task)
         {
-            timeoutCancellationTokenSource.Cancel();
+            await timeoutCancellationTokenSource.CancelAsync();
             return await task;
         }
 
