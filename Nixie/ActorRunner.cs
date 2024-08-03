@@ -15,13 +15,13 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
 
     private readonly ILogger? logger;
 
-    private readonly ConcurrentQueue<ActorMessage<TRequest>> inbox = new();    
-    
+    private readonly ConcurrentQueue<ActorMessage<TRequest>> inbox = new();
+
     private TaskCompletionSource? gracefulShutdown;
 
     private int processing = 1;
 
-    private int shutdown = 1;    
+    private int shutdown = 1;
 
     /// <summary>
     /// Returns the name of the actor
@@ -94,9 +94,14 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     /// <returns></returns>
     public bool Shutdown()
     {
-        return 1 == Interlocked.Exchange(ref shutdown, 0);
+        bool success = 1 == Interlocked.Exchange(ref shutdown, 0);
+
+        if (success)
+            ActorContext?.PostShutdown();
+
+        return success;
     }
-    
+
     /// <summary>
     /// Tries to shutdown the actor returns a task whose result confirms shutdown within the specified timespan
     /// </summary>
@@ -167,7 +172,7 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
                     }
                 }
             } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
-            
+
             gracefulShutdown?.SetResult();
         }
         catch (Exception ex)

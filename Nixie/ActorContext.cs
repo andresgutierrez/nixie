@@ -10,26 +10,20 @@ namespace Nixie;
 public sealed class ActorContext<TActor, TRequest> : IActorContext<TActor, TRequest>
     where TActor : IActor<TRequest> where TRequest : class
 {
-    private readonly ActorSystem actorSystem;
-
-    private readonly ILogger? logger;
-
-    private readonly ActorRef<TActor, TRequest> self;
-
     /// <summary>
     /// Returns the actor system
     /// </summary>
-    public ActorSystem ActorSystem => actorSystem;
+    public ActorSystem ActorSystem { get; }
 
     /// <summary>
     /// Returns the actor system logger
     /// </summary>
-    public ILogger? Logger => logger;
+    public ILogger? Logger { get; }
 
     /// <summary>
     /// Returns a reference to the current actor
     /// </summary>
-    public ActorRef<TActor, TRequest> Self => self;
+    public ActorRef<TActor, TRequest> Self { get; }
 
     /// <summary>
     /// Returns a reference to the sender of the message
@@ -42,6 +36,11 @@ public sealed class ActorContext<TActor, TRequest> : IActorContext<TActor, TRequ
     public ActorRunner<TActor, TRequest>? Runner { get; set; }
 
     /// <summary>
+    /// Event that is triggered when the actor is shutdown
+    /// </summary>
+    public event Action? OnPostShutdown;
+
+    /// <summary>
     /// Creates a new actor context.
     /// </summary>
     /// <param name="actorSystem"></param>
@@ -49,8 +48,16 @@ public sealed class ActorContext<TActor, TRequest> : IActorContext<TActor, TRequ
     /// <param name="self"></param>
     public ActorContext(ActorSystem actorSystem, ILogger? logger, ActorRef<TActor, TRequest> self)
     {
-        this.actorSystem = actorSystem;
-        this.logger = logger;
-        this.self = self;
+        ActorSystem = actorSystem;
+        Logger = logger;
+        Self = self;
+    }
+
+    /// <summary>
+    /// Run the post shutdown routine for the actor
+    /// </summary>
+    public void PostShutdown()
+    {
+        OnPostShutdown?.Invoke();
     }
 }

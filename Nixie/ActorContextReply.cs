@@ -10,26 +10,20 @@ namespace Nixie;
 public sealed class ActorContext<TActor, TRequest, TResponse> : IActorContext<TActor, TRequest, TResponse>
     where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
-    private readonly ActorSystem actorSystem;
-
-    private readonly ILogger? logger;
-
-    private readonly ActorRef<TActor, TRequest, TResponse> self;
-
     /// <summary>
     /// Returns the actor system
     /// </summary>
-    public ActorSystem ActorSystem => actorSystem;
+    public ActorSystem ActorSystem { get; }
 
     /// <summary>
     /// Returns the actor system logger
     /// </summary>
-    public ILogger? Logger => logger;
+    public ILogger? Logger { get; }
 
     /// <summary>
     /// Returns the actor system
     /// </summary>
-    public ActorRef<TActor, TRequest, TResponse> Self => self;
+    public ActorRef<TActor, TRequest, TResponse> Self { get; }
 
     /// <summary>
     /// Returns a reference to the sender of the message
@@ -53,6 +47,11 @@ public sealed class ActorContext<TActor, TRequest, TResponse> : IActorContext<TA
     public ActorRunner<TActor, TRequest, TResponse>? Runner { get; set; }
 
     /// <summary>
+    /// Event that is triggered when the actor is shutdown
+    /// </summary>
+    public event Action? OnPostShutdown;
+
+    /// <summary>
     /// Creates a new actor context.
     /// </summary>
     /// <param name="actorSystem"></param>
@@ -60,8 +59,16 @@ public sealed class ActorContext<TActor, TRequest, TResponse> : IActorContext<TA
     /// <param name="self"></param>
     public ActorContext(ActorSystem actorSystem, ILogger? logger, ActorRef<TActor, TRequest, TResponse> self)
     {
-        this.actorSystem = actorSystem;
-        this.logger = logger;
-        this.self = self;
+        ActorSystem = actorSystem;
+        Logger = logger;
+        Self = self;
+    }
+
+    /// <summary>
+    /// Run the post shutdown routine for the actor
+    /// </summary>
+    public void PostShutdown()
+    {
+        OnPostShutdown?.Invoke();
     }
 }

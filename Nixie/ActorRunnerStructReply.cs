@@ -112,7 +112,12 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
     /// <returns></returns>
     public bool Shutdown()
     {
-        return 1 == Interlocked.Exchange(ref shutdown, 0);
+        bool success = 1 == Interlocked.Exchange(ref shutdown, 0);
+
+        if (success)
+            ActorContext?.PostShutdown();
+
+        return success;
     }
 
     /// <summary>

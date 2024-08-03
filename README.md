@@ -12,10 +12,10 @@ Nixie is a lightweight, high-performance implementation of the [actor model](htt
 
 ### Advantages of using Nixie Actor/Model vs. Traditional Threads Programming
 
-1. **Simplified Concurrency Model:**: Nixie abstracts away low-level thread management, providing a higher-level concurrency model that is easier to reason about and manage.
+1. **Simplified Concurrency Model:** Nixie abstracts away low-level thread management, providing a higher-level concurrency model that is easier to reason about and manage.
 2. **Improved Scalability:** Actor systems can efficiently scale across multiple CPU cores and even multiple machines, whereas managing threads for scalability can be complex and error-prone.
 3. **Enhanced Fault Tolerance:** Nixie include built-in fault tolerance mechanisms, such as supervision strategies, which help to recover from failures gracefully.
-4. **Isolation and Encapsulation:**: Each actor encapsulates its state and behavior, reducing the risk of shared state conflicts and making the system more modular and easier to maintain.
+4. **Isolation and Encapsulation:** Each actor encapsulates its state and behavior, reducing the risk of shared state conflicts and making the system more modular and easier to maintain.
 5. **Simplified Error Handling:** Actors can handle errors locally and propagate them in a controlled manner, improving the robustness and reliability of the application.
 6. **Natural Asynchronous Programming:** Actor models promote asynchronous message passing, which can lead to more responsive applications compared to blocking thread-based models.
 7. **Reduced Complexity:** Traditional thread programming can be complex due to the need for synchronization primitives (locks, semaphores, etc.), whereas actor models eliminate the need for these by design.

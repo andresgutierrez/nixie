@@ -28,7 +28,7 @@ public sealed class TestShutdown
         IActorRef<ShutdownActor, string>? actor2 = asx.Get<ShutdownActor, string>("my-actor");
         Assert.Null(actor2);
     }
-    
+
     [Fact]
     public async Task TestSpawnReplyActorAndShutdownByName()
     {
@@ -76,6 +76,30 @@ public sealed class TestShutdown
     }
 
     [Fact]
+    public async Task TestSpawnFireAndForgetActorAndPostShutdownByName()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<PostShutdownActor, string> actor = asx.Spawn<PostShutdownActor, string>("my-actor");
+
+        Assert.IsAssignableFrom<PostShutdownActor>(actor.Runner.Actor);
+
+        actor.Send("TestSpawnFireAndForgetActorAndPostShutdownByName");
+
+        await asx.Wait();
+
+        Assert.True(asx.Shutdown<PostShutdownActor, string>("my-actor"));
+
+        await asx.Wait();
+
+        Assert.Equal(1, ((PostShutdownActor)actor.Runner.Actor!).GetMessages());
+        Assert.True(((PostShutdownActor)actor.Runner.Actor!).GetShutdownFlag());
+
+        IActorRef<PostShutdownActor, string>? actor2 = asx.Get<PostShutdownActor, string>("my-actor");
+        Assert.Null(actor2);
+    }
+
+    [Fact]
     public async Task TestSpawnFireAndForgetActorAndShutdownByName2()
     {
         using ActorSystem asx = new();
@@ -103,7 +127,7 @@ public sealed class TestShutdown
         IActorRef<ShutdownActor, string>? actor2 = asx.Get<ShutdownActor, string>("my-actor");
         Assert.Null(actor2);
     }
-    
+
     [Fact]
     public async Task TestSpawnReplyActorAndShutdownByName2()
     {
@@ -155,7 +179,7 @@ public sealed class TestShutdown
         IActorRef<ShutdownActor, string>? actor2 = asx.Get<ShutdownActor, string>("my-actor");
         Assert.Null(actor2);
     }
-    
+
     [Fact]
     public async Task TestSpawnReplyActorAndShutdownByRef()
     {
@@ -230,7 +254,7 @@ public sealed class TestShutdown
         IActorRef<ShutdownActor, string>? actor2 = asx.Get<ShutdownActor, string>("my-actor");
         Assert.Null(actor2);
     }
-    
+
     [Fact]
     public async Task TestSpawnReplyActorAndShutdownByRef2()
     {
@@ -282,7 +306,7 @@ public sealed class TestShutdown
         IActorRef<ShutdownInsideActor, string>? actor2 = asx.Get<ShutdownInsideActor, string>("my-actor");
         Assert.Null(actor2);
     }
-    
+
     [Fact]
     public async Task TestSpawnFireAndForgetActorAndGracefulShutdownByName()
     {
@@ -305,7 +329,7 @@ public sealed class TestShutdown
         IActorRef<ShutdownActor, string>? actor2 = asx.Get<ShutdownActor, string>("my-actor");
         Assert.Null(actor2);
     }
-    
+
     [Fact]
     public async Task TestSpawnFireAndForgetActorAndScheduleShutdownByRef()
     {
@@ -318,7 +342,7 @@ public sealed class TestShutdown
         actor.Send("TestSpawnFireAndForgetActorAndShutdownByName");
 
         await asx.Wait();
-        
+
         Assert.Equal(1, ((ShutdownActor)actor.Runner.Actor!).GetMessages());
 
         asx.ScheduleShutdown(actor, TimeSpan.FromMilliseconds(1000));
@@ -330,7 +354,7 @@ public sealed class TestShutdown
         IActorRef<ShutdownActor, string>? actor2 = asx.Get<ShutdownActor, string>("my-actor");
         Assert.Null(actor2);
     }
-    
+
     [Fact]
     public async Task TestSpawnFireAndForgetSlowActorAndGracefulShutdownByName()
     {
@@ -353,7 +377,7 @@ public sealed class TestShutdown
         IActorRef<ShutdownSlowActor, string>? actor2 = asx.Get<ShutdownSlowActor, string>("my-actor");
         Assert.Null(actor2);
     }
-    
+
     [Fact]
     public async Task TestSpawnFireAndForgetSlowActorAndGracefulShutdownShortDelayByName()
     {
@@ -376,7 +400,7 @@ public sealed class TestShutdown
         IActorRef<ShutdownSlowActor, string>? actor2 = asx.Get<ShutdownSlowActor, string>("my-actor");
         Assert.Null(actor2);
     }
-    
+
     [Fact]
     public async Task TestSpawnFireAndForgetSlowActorAndGracefulShutdownShortDelayByName2()
     {

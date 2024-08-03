@@ -13,6 +13,11 @@ public interface IActorContext<TActor, TRequest, TResponse>
     where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     /// <summary>
+    /// Event that is triggered when the actor is shutdown
+    /// </summary>
+    public event Action? OnPostShutdown;
+
+    /// <summary>
     /// Returns a reference to the actor system
     /// </summary>
     public ActorSystem ActorSystem { get; }

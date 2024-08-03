@@ -11,6 +11,11 @@ namespace Nixie;
 public interface IActorContext<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
 {
     /// <summary>
+    /// Event that is triggered when the actor is shutdown
+    /// </summary>
+    public event Action? OnPostShutdown;
+
+    /// <summary>
     /// Returns the actor system
     /// </summary>
     public ActorSystem ActorSystem { get; }

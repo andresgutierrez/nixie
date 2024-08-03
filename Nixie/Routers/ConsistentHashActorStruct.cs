@@ -48,7 +48,7 @@ public class ConsistentHashActorStruct<TActor, TRequest> : IActorStruct<TRequest
     /// <param name="message"></param>
     /// <returns></returns>
     public Task Receive(TRequest message)
-    {        
+    {
         IActorRefStruct<TActor, TRequest> instance = instances[message.GetHash() % instances.Count];
         instance.Send(message);
 
