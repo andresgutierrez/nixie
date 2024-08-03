@@ -1,5 +1,6 @@
 ﻿
 using System.Collections.Concurrent;
+using DotNext.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace Nixie;
@@ -81,20 +82,15 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
     /// <param name="sender"></param>
     /// <param name="parentReply"></param>
     /// <returns></returns>
-    public TaskCompletionSource<TResponse> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
+    public ValueTaskCompletionSource<TResponse> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
     {
-        ActorMessageReply<TRequest, TResponse> messageReply;
+        ValueTaskCompletionSource<TResponse> promise = new(runContinuationsAsynchronously: true);
 
-        TaskCompletionSource<TResponse> promise = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        if (parentReply is not null)
-            messageReply = parentReply;
-        else
-            messageReply = new(message, sender, promise);
+        ActorMessageReply<TRequest, TResponse> messageReply = parentReply ?? new(message, sender, promise);
 
         if (shutdown == 0)
         {
-            promise.SetCanceled();
+            promise.TrySetCanceled(TimeSpan.MaxValue, default);
             return promise;
         }
 
@@ -182,14 +178,14 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
 
                     try
                     {
-                        TResponse? response = await Actor.Receive(message.Request);
+                        TResponse response = await Actor.Receive(message.Request);
 
                         if (!ActorContext.ByPassReply)
-                            message.Promise.SetResult(default);
+                            message.Promise.TrySetResult(response);
                     }
                     catch (Exception ex)
                     {
-                        message.Promise.SetResult(default);
+                        message.Promise.TrySetResult(default);
 
                         logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
                     }
