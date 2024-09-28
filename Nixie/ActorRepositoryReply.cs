@@ -188,8 +188,8 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
         {
             if (actor.Value.runner.Shutdown())
             {
-                actors.TryRemove(name, out _);
                 actorSystem.StopAllTimers(actor.Value.actorRef);
+                actors.TryRemove(name, out _);
                 return true;
             }
         }

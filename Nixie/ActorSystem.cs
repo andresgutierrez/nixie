@@ -652,8 +652,7 @@ public sealed class ActorSystem : IDisposable
     /// </summary>
     /// <param name="name"></param>
     /// <exception cref="NixieException"></exception>
-    public void StopPeriodicTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, string name)
-        where TActor : IActor<TRequest> where TRequest : class
+    public void StopPeriodicTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, string name) where TActor : IActor<TRequest> where TRequest : class
     {
         scheduler.StopPeriodicTimer(actorRef, name);
     }
@@ -663,8 +662,7 @@ public sealed class ActorSystem : IDisposable
     /// </summary>
     /// <param name="name"></param>
     /// <exception cref="NixieException"></exception>
-    public void StopPeriodicTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, string name)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
+    public void StopPeriodicTimer<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef, string name) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         scheduler.StopPeriodicTimer(actorRef, name);
     }
@@ -676,8 +674,7 @@ public sealed class ActorSystem : IDisposable
     /// <typeparam name="TRequest"></typeparam>
     /// <typeparam name="TResponse"></typeparam>
     /// <param name="actorRef"></param>
-    public void StopAllTimers<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef)
-        where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
+    public void StopAllTimers<TActor, TRequest, TResponse>(IActorRef<TActor, TRequest, TResponse> actorRef) where TActor : IActor<TRequest, TResponse> where TRequest : class where TResponse : class?
     {
         scheduler.StopAllTimers(actorRef);
     }

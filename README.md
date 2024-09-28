@@ -38,7 +38,7 @@ Nixie is a lightweight, high-performance implementation of the [actor model](htt
 
 ### Prerequisites
 
-- .NET SDK 6.0 or later
+- .NET SDK 8.0 or later
 - A suitable IDE (e.g., Visual Studio, Visual Studio Code, or Rider)
 
 ### Installation
@@ -48,7 +48,7 @@ To install Nixie into your C#/.NET project, you can use the .NET CLI or the NuGe
 #### Using .NET CLI
 
 ```shell
-dotnet add package Nixie --version 1.0.8
+dotnet add package Nixie --version 1.0.9
 ```
 
 ### Using NuGet Package Manager
@@ -56,7 +56,7 @@ dotnet add package Nixie --version 1.0.8
 Search for Nixie and install it from the NuGet package manager UI, or use the Package Manager Console:
 
 ```shell
-Install-Package Nixie -Version 1.0.8
+Install-Package Nixie -Version 1.0.9
 ```
 
 ## Usage

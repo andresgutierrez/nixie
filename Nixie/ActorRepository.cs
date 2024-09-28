@@ -232,6 +232,7 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
         if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)>? actor))
         {
             bool result = await actor.Value.runner.GracefulShutdown(maxWait);
+            actorSystem.StopAllTimers(actor.Value.actorRef);
             actors.TryRemove(name, out _);
             return result;
         }
@@ -252,8 +253,8 @@ public sealed class ActorRepository<TActor, TRequest> : IActorRepositoryRunnable
         if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest> runner, ActorRef<TActor, TRequest> actorRef)>? actor))
         {
             bool success = await actor.Value.runner.GracefulShutdown(maxWait);
-            actors.TryRemove(name, out _);
             actorSystem.StopAllTimers(actor.Value.actorRef);
+            actors.TryRemove(name, out _);
             return success;
         }
 

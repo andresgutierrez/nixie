@@ -110,7 +110,7 @@ public sealed class ActorRepositoryStruct<TActor, TRequest, TResponse> : IActorR
 
         Lazy<(ActorRunnerStruct<TActor, TRequest, TResponse> runner, ActorRefStruct<TActor, TRequest, TResponse> actorRef)> actor = actors.GetOrAdd(
             name,
-            (string name) => new Lazy<(ActorRunnerStruct<TActor, TRequest, TResponse>, ActorRefStruct<TActor, TRequest, TResponse>)>(() => CreateInternal(name, args))
+            (string name) => new(() => CreateInternal(name, args))
         );
 
         return actor.Value.actorRef;
@@ -188,6 +188,7 @@ public sealed class ActorRepositoryStruct<TActor, TRequest, TResponse> : IActorR
         {
             if (actor.Value.runner.Shutdown())
             {
+                actorSystem.StopAllTimers(actor.Value.actorRef);
                 actors.TryRemove(name, out _);
                 return true;
             }
@@ -209,6 +210,7 @@ public sealed class ActorRepositoryStruct<TActor, TRequest, TResponse> : IActorR
         {
             if (actor.Value.runner.Shutdown())
             {
+                actorSystem.StopAllTimers(actor.Value.actorRef);
                 actors.TryRemove(name, out _);
                 return true;
             }

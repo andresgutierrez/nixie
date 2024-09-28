@@ -224,8 +224,7 @@ public class ActorScheduler : IDisposable
     /// </summary>
     /// <param name="name"></param>
     /// <exception cref="NixieException"></exception>
-    public void StopPeriodicTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, string name)
-        where TActor : IActor<TRequest> where TRequest : class
+    public void StopPeriodicTimer<TActor, TRequest>(IActorRef<TActor, TRequest> actorRef, string name) where TActor : IActor<TRequest> where TRequest : class
     {
         if (periodicTimers.TryGetValue(actorRef, out Lazy<ConcurrentDictionary<string, Lazy<Timer>>>? timers))
         {

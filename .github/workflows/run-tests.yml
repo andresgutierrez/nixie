@@ -25,7 +25,7 @@ jobs:
       - name: Run Tests 
         run: (cd Nixie.Tests && dotnet dotcover test --dcOutput=NixieCoverageReport.html --dcReportType=HTML)      
       - name: Archive code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: code-coverage-report
           path: |

@@ -75,7 +75,7 @@ public sealed class ActorRepositoryStruct<TActor, TRequest> : IActorRepositoryRu
             {
                 ActorRunnerStruct<TActor, TRequest> runner = lazyValue.Value.runner;
 
-                if (!runner.IsShutdown && runner.IsProcessing)
+                if (runner is { IsShutdown: false, IsProcessing: true })
                 {
                     actorName = runner.Name;
                     return true;
@@ -110,7 +110,7 @@ public sealed class ActorRepositoryStruct<TActor, TRequest> : IActorRepositoryRu
 
         Lazy<(ActorRunnerStruct<TActor, TRequest> runner, ActorRefStruct<TActor, TRequest> actorRef)> actor = actors.GetOrAdd(
             name,
-            (string name) => new Lazy<(ActorRunnerStruct<TActor, TRequest>, ActorRefStruct<TActor, TRequest>)>(() => CreateInternal(name, args))
+            (string name) => new(() => CreateInternal(name, args))
         );
 
         return actor.Value.actorRef;
