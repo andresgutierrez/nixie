@@ -11,7 +11,7 @@ namespace Nixie;
 [AsyncMethodBuilder(typeof(LazyTaskMethodBuilder<>))]
 public class LazyTask<T> : INotifyCompletion
 {
-    private readonly object syncObj = new();
+    private readonly Lock syncObj = new();
 
     private T? result;
 
