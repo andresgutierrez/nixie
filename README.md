@@ -38,7 +38,7 @@ Nixie is a lightweight, high-performance implementation of the [actor model](htt
 
 ### Prerequisites
 
-- .NET SDK 8.0 or later
+- .NET SDK 9.0 or later
 - A suitable IDE (e.g., Visual Studio, Visual Studio Code, or Rider)
 
 ### Installation
