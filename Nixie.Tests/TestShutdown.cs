@@ -418,7 +418,7 @@ public sealed class TestShutdown
 
         await asx.Wait();
 
-        int x = ((ShutdownSlowActor)actor.Runner.Actor!).GetMessages()
+        int x = ((ShutdownSlowActor)actor.Runner.Actor!).GetMessages();
         Assert.True(2 == x || x == 1);
 
         IActorRef<ShutdownSlowActor, string>? actor2 = asx.Get<ShutdownSlowActor, string>("my-actor");
