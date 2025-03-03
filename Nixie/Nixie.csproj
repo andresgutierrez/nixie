@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <TargetFramework>net9.0</TargetFramework>    
+    <TargetFramework>net8.0</TargetFramework>    
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>Nixie</PackageId>
@@ -37,8 +37,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
-    <PackageReference Include="DotNext.Threading" Version="5.15.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.2" />
+    <PackageReference Include="DotNext.Threading" Version="5.18.1" />
   </ItemGroup>
 </Project>

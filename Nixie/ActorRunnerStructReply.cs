@@ -90,7 +90,7 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
 
         if (shutdown == 0)
         {
-            promise.TrySetCanceled(TimeSpan.MaxValue, default);
+            promise.TrySetCanceled(TimeSpan.MaxValue, CancellationToken.None);
             return promise;
         }
 
@@ -181,7 +181,10 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
                         TResponse response = await Actor.Receive(message.Request);
 
                         if (!ActorContext.ByPassReply)
+                        {
                             message.Promise.TrySetResult(response);
+                            //Console.WriteLine("set result");
+                        }
                     }
                     catch (Exception ex)
                     {

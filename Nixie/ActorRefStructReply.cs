@@ -66,7 +66,7 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     {
         ValueTaskCompletionSource<TResponse> promise = runner.SendAndTryDeliver(message, null, null);
 
-        return await promise.CreateTask(TimeSpan.FromHours(1), default);
+        return await promise.CreateTask(TimeSpan.FromHours(1), CancellationToken.None);
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
 
         ValueTaskCompletionSource<TResponse> completionSource = runner.SendAndTryDeliver(message, null, null);
 
-        Task<TResponse> task = completionSource.CreateTask(TimeSpan.FromHours(1), default).AsTask();
+        Task<TResponse> task = completionSource.CreateTask(TimeSpan.FromHours(1), CancellationToken.None).AsTask();
         
         Task completedTask = await Task.WhenAny(
             task,
