@@ -82,7 +82,7 @@ public sealed class ActorRunnerStruct<TActor, TRequest> where TActor : IActorStr
         if (shutdown == 0)
             return;
 
-        inbox.Enqueue(new ActorMessage<TRequest>(message, sender));
+        inbox.Enqueue(new(message, sender));
 
         if (1 == Interlocked.Exchange(ref processing, 0))
             _ = DeliverMessages();
@@ -179,5 +179,39 @@ public sealed class ActorRunnerStruct<TActor, TRequest> where TActor : IActorStr
         {
             logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
         }
+    }
+
+    /// <summary>
+    /// Allows to peek at the next message in the inbox without removing it.
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    public bool TryPeek(out TRequest? message)
+    {
+        if (inbox.TryPeek(out ActorMessage<TRequest> nextMssage))
+        {
+            message = nextMssage.Request;
+            return true;
+        }
+
+        message = null;
+        return false;
+    }
+    
+    /// <summary>
+    /// Allows to dequeue the next message in the inbox.
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    public bool TryDequeue(out TRequest? message)
+    {
+        if (inbox.TryDequeue(out ActorMessage<TRequest> nextMssage))
+        {
+            message = nextMssage.Request;
+            return true;
+        }
+
+        message = null;
+        return false;
     }
 }

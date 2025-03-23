@@ -1,14 +1,14 @@
-﻿
+
 namespace Nixie.Tests.Actors;
 
-public sealed class FireAndForgetSlowActor : IActor<string>
+public sealed class FireAndForgetAggregateActor : IActorAggregate<string>
 {
     private readonly Dictionary<string, int> receivedMessages = new();
 
-    public FireAndForgetSlowActor(IActorContext<FireAndForgetSlowActor, string> context)
+    public FireAndForgetAggregateActor(IActorAggregateContext<FireAndForgetAggregateActor, string> _)
     {
 
-    }    
+    }
 
     public int GetMessages(string id)
     {
@@ -23,10 +23,11 @@ public sealed class FireAndForgetSlowActor : IActor<string>
             receivedMessages[id] = ++value;
     }
 
-    public async Task Receive(string message)
+    public Task Receive(List<string> messages)
     {
-        await Task.Delay(100);
-
-        IncrMessage(message);
+        foreach (string message in messages)
+            IncrMessage(message);
+        
+        return Task.CompletedTask;
     }
 }

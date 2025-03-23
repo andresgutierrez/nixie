@@ -81,6 +81,51 @@ public class TestSendMessages
 
         Assert.Equal(100, ((FireAndForgetActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
     }
+    
+    [Fact]
+    public async Task TestSendMessageToSingleAggregateActorNoResponse()
+    {
+        using ActorSystem asx = new();
+
+        IActorAggregateRef<FireAndForgetAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>();
+
+        actor.Send("TestSendMessageToSingleActorNoResponse");
+
+        await asx.Wait();
+
+        Assert.Equal(1, ((FireAndForgetAggregateActor)actor.Runner.Actor!).GetMessages("TestSendMessageToSingleActorNoResponse"));
+    }
+
+    [Fact]
+    public async Task TestSendMultipleMessageToSingleAggregateActorNoResponse()
+    {
+        using ActorSystem asx = new();
+
+        IActorAggregateRef<FireAndForgetAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
+
+        actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
+        actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
+        actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
+
+        await asx.Wait();
+
+        Assert.Equal(3, ((FireAndForgetAggregateActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
+    }
+
+    [Fact]
+    public async Task TestSendMultipleMessageToSingleAggregateActorNoResponse2()
+    {
+        using ActorSystem asx = new();
+
+        IActorAggregateRef<FireAndForgetAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
+
+        for (int i = 0; i < 100; i++)
+            actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
+
+        await asx.Wait();
+
+        Assert.Equal(100, ((FireAndForgetAggregateActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleActorNoResponse"));
+    }
 
     [Fact]
     public async Task TestSendMultipleMessageToSingleActorNoResponseSlow()
@@ -111,6 +156,37 @@ public class TestSendMessages
         await asx.Wait();
 
         Assert.Equal(10, ((FireAndForgetSlowActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleActorNoResponseSlow"));
+    }
+    
+    [Fact]
+    public async Task TestSendMultipleMessageToSingleAggregateActorNoResponseSlow()
+    {
+        using ActorSystem asx = new();
+
+        IActorAggregateRef<FireAndForgetSlowAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetSlowAggregateActor, string>("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow");
+
+        actor.Send("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow");
+        actor.Send("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow");
+        actor.Send("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow");
+
+        await asx.Wait();
+
+        Assert.Equal(3, ((FireAndForgetSlowAggregateActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow"));
+    }
+
+    [Fact]
+    public async Task TestSendMultipleMessageToSingleAggregateActorNoResponseSlow2()
+    {
+        using ActorSystem asx = new();
+
+        IActorAggregateRef<FireAndForgetSlowAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetSlowAggregateActor, string>("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow2");
+
+        for (int i = 0; i < 10; i++)
+            actor.Send("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow2");
+
+        await asx.Wait();
+
+        Assert.Equal(10, ((FireAndForgetSlowAggregateActor)actor.Runner.Actor!).GetMessages("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow2"));
     }
 
     [Fact]

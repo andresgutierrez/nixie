@@ -61,6 +61,23 @@ public sealed class ActorSystem : IDisposable
     }
 
     /// <summary>
+    /// Creates a new fire-n-forget aggregate actor and returns a typed reference.
+    /// Aggreate actors receive a batch of messages and process them in a single execution instead of one by one.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public IActorAggregateRef<TActor, TRequest> SpawnAggregate<TActor, TRequest>(string? name = null, params object[]? args)
+        where TActor : IActorAggregate<TRequest> where TRequest : class
+    {
+        ActorRepositoryAggregate<TActor, TRequest> repository = GetRepositoryAggregate<TActor, TRequest>();
+
+        return repository.Spawn(name, args);
+    }
+    
+    /// <summary>
     /// Creates a new fire-n-forget actor and returns a typed reference.
     /// </summary>
     /// <typeparam name="TActor"></typeparam>
@@ -429,6 +446,36 @@ public sealed class ActorSystem : IDisposable
         where TActor : IActor<TRequest> where TRequest : class
     {
         ActorRepository<TActor, TRequest> repository = new(this, serviceProvider, logger);
+        return repository;
+    }
+    
+    /// <summary>
+    /// Returns the repository where the current references to fire-n-forget actors are stored.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <returns></returns>
+    public ActorRepositoryAggregate<TActor, TRequest> GetRepositoryAggregate<TActor, TRequest>()
+        where TActor : IActorAggregate<TRequest> where TRequest : class
+    {
+        Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
+            typeof(TActor),
+            CreateRepositoryInternalAggregate<TActor, TRequest>
+        );
+
+        return (ActorRepositoryAggregate<TActor, TRequest>)repository.Value;
+    }
+    
+    private Lazy<IActorRepositoryRunnable> CreateRepositoryInternalAggregate<TActor, TRequest>(Type type)
+        where TActor : IActorAggregate<TRequest> where TRequest : class
+    {
+        return new(CreateRepositoryBuilderAggreggate<TActor, TRequest>);
+    }
+    
+    private ActorRepositoryAggregate<TActor, TRequest> CreateRepositoryBuilderAggreggate<TActor, TRequest>()
+        where TActor : IActorAggregate<TRequest> where TRequest : class
+    {
+        ActorRepositoryAggregate<TActor, TRequest> repository = new(this, serviceProvider, logger);
         return repository;
     }
 

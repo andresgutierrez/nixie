@@ -1,4 +1,4 @@
-﻿
+
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 
@@ -9,13 +9,15 @@ namespace Nixie;
 /// </summary>
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
-public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
+public sealed class ActorRunnerAggregate<TActor, TRequest> where TActor : IActorAggregate<TRequest> where TRequest : class
 {
     private readonly ActorSystem actorSystem;
 
     private readonly ILogger? logger;
 
     private readonly ConcurrentQueue<ActorMessage<TRequest>> inbox = new();
+    
+    private readonly List<TRequest> messages = [];
 
     private TaskCompletionSource? gracefulShutdown;
 
@@ -41,12 +43,12 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     /// <summary>
     /// Reference to the actual actor
     /// </summary>
-    public IActor<TRequest>? Actor { get; set; }
+    public IActorAggregate<TRequest>? Actor { get; set; }
 
     /// <summary>
     /// Reference to the current actor context
     /// </summary>
-    public ActorContext<TActor, TRequest>? ActorContext { get; set; }
+    public ActorAggregateContext<TActor, TRequest>? ActorContext { get; set; }
 
     /// <summary>
     /// Returns true if the runner is processing messages
@@ -64,7 +66,7 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     /// <param name="actorSystem"></param>
     /// <param name="logger"></param>
     /// <param name="name"></param>
-    public ActorRunner(ActorSystem actorSystem, ILogger? logger, string name)
+    public ActorRunnerAggregate(ActorSystem actorSystem, ILogger? logger, string name)
     {
         this.actorSystem = actorSystem;
         this.logger = logger;
@@ -149,29 +151,45 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
 
             do
             {
-                while (inbox.TryDequeue(out ActorMessage<TRequest> message))
+                do
                 {
                     if (shutdown == 0)
                         break;
 
-                    if (ActorContext is not null)
+                    while (inbox.TryDequeue(out ActorMessage<TRequest> message))
                     {
-                        // last sender is assigned
-                        if (message.Sender is not null)
-                            ActorContext.Sender = message.Sender;
-                        else
-                            ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+                        if (shutdown == 0)
+                            break;
+
+                        if (ActorContext is not null)
+                        {
+                            if (message.Sender is not null)
+                                ActorContext.Sender = message.Sender;
+                            else
+                                ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+                        }
+
+                        messages.Add(message.Request);
                     }
 
-                    try
+                    if (messages.Count > 0 && shutdown == 1)
                     {
-                        await Actor.Receive(message.Request);
+                        try
+                        {
+                            await Actor.Receive(messages);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+
+                            // Console.WriteLine("[{0}] {1}: {2}\n{3}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+                        }
+
+                        messages.Clear();
                     }
-                    catch (Exception ex)
-                    {
-                        logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
-                    }
-                }
+
+                } while (!inbox.IsEmpty);
+                
             } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
 
             gracefulShutdown?.SetResult();
@@ -179,6 +197,8 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
         catch (Exception ex)
         {
             logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Console.WriteLine("[{0}] {1}: {2}\n{3}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
         }
     }
     

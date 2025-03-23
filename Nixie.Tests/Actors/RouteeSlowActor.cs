@@ -17,7 +17,7 @@ public sealed class RouteeSlowActor : IActor<RouterMessage>
         return receivedMessages;
     }
 
-    public void IncrMessage()
+    private void IncrMessage()
     {
         receivedMessages++;
     }
