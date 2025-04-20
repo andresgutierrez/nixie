@@ -82,15 +82,15 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
     /// <param name="sender"></param>
     /// <param name="parentReply"></param>
     /// <returns></returns>
-    public ValueTaskCompletionSource<TResponse?> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
+    public TaskCompletionSource<TResponse?> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
     {
-        ValueTaskCompletionSource<TResponse?> promise = new(runContinuationsAsynchronously: true);
+        TaskCompletionSource<TResponse?> promise = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         ActorMessageReply<TRequest, TResponse> messageReply = parentReply ?? new(message, sender, promise);
 
         if (shutdown == 0)
         {
-            promise.TrySetCanceled(TimeSpan.MaxValue, default);
+            promise.TrySetCanceled(CancellationToken.None);
             return promise;
         }
 

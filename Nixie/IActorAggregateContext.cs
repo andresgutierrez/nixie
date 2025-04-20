@@ -1,3 +1,4 @@
+
 using Microsoft.Extensions.Logging;
 
 namespace Nixie;
@@ -7,7 +8,8 @@ namespace Nixie;
 /// </summary>
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
-public interface IActorAggregateContext<TActor, TRequest> where TActor : IActorAggregate<TRequest> where TRequest : class
+public interface IActorAggregateContext<TActor, TRequest> 
+    where TActor : IActorAggregate<TRequest> where TRequest : class
 {
     /// <summary>
     /// Event that is triggered when the actor is shutdown
@@ -27,7 +29,7 @@ public interface IActorAggregateContext<TActor, TRequest> where TActor : IActorA
     /// <summary>
     /// Returns a reference to the current actor
     /// </summary>
-    public ActorAggregateRef<TActor, TRequest> Self { get; }
+    public ActorRefAggregate<TActor, TRequest> Self { get; }
 
     /// <summary>
     /// Returns a reference to the sender of the message

@@ -87,7 +87,7 @@ public class TestSendMessages
     {
         using ActorSystem asx = new();
 
-        IActorAggregateRef<FireAndForgetAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>();
+        IActorRefAggregate<FireAndForgetAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>();
 
         actor.Send("TestSendMessageToSingleActorNoResponse");
 
@@ -101,7 +101,7 @@ public class TestSendMessages
     {
         using ActorSystem asx = new();
 
-        IActorAggregateRef<FireAndForgetAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
+        IActorRefAggregate<FireAndForgetAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
 
         actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
         actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
@@ -117,7 +117,7 @@ public class TestSendMessages
     {
         using ActorSystem asx = new();
 
-        IActorAggregateRef<FireAndForgetAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
+        IActorRefAggregate<FireAndForgetAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>("TestSendMultipleMessageToSingleActorNoResponse");
 
         for (int i = 0; i < 100; i++)
             actor.Send("TestSendMultipleMessageToSingleActorNoResponse");
@@ -163,7 +163,7 @@ public class TestSendMessages
     {
         using ActorSystem asx = new();
 
-        IActorAggregateRef<FireAndForgetSlowAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetSlowAggregateActor, string>("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow");
+        IActorRefAggregate<FireAndForgetSlowAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetSlowAggregateActor, string>("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow");
 
         actor.Send("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow");
         actor.Send("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow");
@@ -179,7 +179,7 @@ public class TestSendMessages
     {
         using ActorSystem asx = new();
 
-        IActorAggregateRef<FireAndForgetSlowAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetSlowAggregateActor, string>("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow2");
+        IActorRefAggregate<FireAndForgetSlowAggregateActor, string> actor = asx.SpawnAggregate<FireAndForgetSlowAggregateActor, string>("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow2");
 
         for (int i = 0; i < 10; i++)
             actor.Send("TestSendMultipleMessageToSingleAggregateActorNoResponseSlow2");

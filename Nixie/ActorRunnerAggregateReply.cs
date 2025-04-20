@@ -1,5 +1,6 @@
-﻿
+
 using System.Collections.Concurrent;
+using DotNext.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace Nixie;
@@ -9,14 +10,18 @@ namespace Nixie;
 /// </summary>
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
-public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
+/// <typeparam name="TResponse"></typeparam>
+public sealed class ActorRunnerAggregate<TActor, TRequest, TResponse> 
+    where TActor : IActorAggregate<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     private readonly ActorSystem actorSystem;
 
     private readonly ILogger? logger;
 
-    private readonly ConcurrentQueue<ActorMessage<TRequest>> inbox = new();
-
+    private readonly ConcurrentQueue<ActorMessageReply<TRequest, TResponse>> inbox = new();
+    
+    private readonly List<ActorMessageReply<TRequest, TResponse>> messages = [];
+    
     private TaskCompletionSource? gracefulShutdown;
 
     private int processing = 1;
@@ -24,7 +29,7 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     private int shutdown = 1;
 
     /// <summary>
-    /// Returns the name of the actor
+    /// The name/id of the actor.
     /// </summary>
     public string Name { get; }
 
@@ -39,22 +44,22 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     public int MessageCount => inbox.Count;
 
     /// <summary>
-    /// Reference to the actual actor
+    /// The reference to the actor.
     /// </summary>
-    public IActor<TRequest>? Actor { get; set; }
+    public IActorAggregate<TRequest, TResponse>? Actor { get; set; }
 
     /// <summary>
     /// Reference to the current actor context
     /// </summary>
-    public ActorContext<TActor, TRequest>? ActorContext { get; set; }
+    public ActorAggregateContext<TActor, TRequest, TResponse>? ActorContext { get; set; }
 
     /// <summary>
-    /// Returns true if the runner is processing messages
+    /// True if the actor is processing a message.
     /// </summary>
     public bool IsProcessing => processing == 0;
 
     /// <summary>
-    /// Returns true if the actor is shutdown
+    /// True if the actor is shutdown
     /// </summary>
     public bool IsShutdown => shutdown == 0;
 
@@ -64,7 +69,7 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     /// <param name="actorSystem"></param>
     /// <param name="logger"></param>
     /// <param name="name"></param>
-    public ActorRunner(ActorSystem actorSystem, ILogger? logger, string name)
+    public ActorRunnerAggregate(ActorSystem actorSystem, ILogger? logger, string name)
     {
         this.actorSystem = actorSystem;
         this.logger = logger;
@@ -74,18 +79,30 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
 
     /// <summary>
     /// Enqueues a message to the actor and tries to deliver it.
+    /// The request/response type actors use an object to assign the response once completed. 
     /// </summary>
     /// <param name="message"></param>
     /// <param name="sender"></param>
-    public void SendAndTryDeliver(TRequest message, IGenericActorRef? sender)
+    /// <param name="parentReply"></param>
+    /// <returns></returns>
+    public TaskCompletionSource<TResponse?> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
     {
-        if (shutdown == 0)
-            return;
+        TaskCompletionSource<TResponse?> promise = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        inbox.Enqueue(new(message, sender));
+        ActorMessageReply<TRequest, TResponse> messageReply = parentReply ?? new(message, sender, promise);
+
+        if (shutdown == 0)
+        {
+            promise.TrySetCanceled(CancellationToken.None);
+            return promise;
+        }
+
+        inbox.Enqueue(messageReply);
 
         if (1 == Interlocked.Exchange(ref processing, 0))
             _ = DeliverMessages();
+
+        return promise;
     }
 
     /// <summary>
@@ -123,7 +140,7 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
             timeout,
             gracefulShutdown.Task
         );
-
+        
         if (completed == timeout)
             Shutdown();
 
@@ -131,8 +148,8 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     }
 
     /// <summary>
-    /// Enqueues a message to the actor and tries to deliver it.
-    /// The request/response type actors use an object to assign the response once completed.    
+    /// It retrieves a message from the inbox and invokes the actor by passing one message 
+    /// at a time until the pending message list is cleared.
     /// </summary>
     /// <returns></returns>
     private async Task DeliverMessages()
@@ -144,34 +161,50 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
                 gracefulShutdown?.SetResult();
                 return;
             }
+            
+            messages.Clear();
 
             ActorContext.Runner = this;
-
+            
             do
             {
-                while (inbox.TryDequeue(out ActorMessage<TRequest> message))
+                do
                 {
                     if (shutdown == 0)
                         break;
 
-                    if (ActorContext is not null)
+                    while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
                     {
-                        // last sender is assigned
-                        if (message.Sender is not null)
-                            ActorContext.Sender = message.Sender;
-                        else
-                            ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+                        if (shutdown == 0)
+                            break;
+
+                        if (ActorContext is not null)
+                        {
+                            if (message.Sender is not null)
+                                ActorContext.Sender = message.Sender;
+                            else
+                                ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+                        }
+
+                        messages.Add(message);
                     }
 
-                    try
+                    if (messages.Count > 0 && shutdown == 1)
                     {
-                        await Actor.Receive(message.Request);
+                        try
+                        {
+                            await Actor.Receive(messages);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+                        }
+
+                        messages.Clear();
                     }
-                    catch (Exception ex)
-                    {
-                        logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
-                    }
-                }
+
+                } while (!inbox.IsEmpty);
+                
             } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
 
             gracefulShutdown?.SetResult();
@@ -180,39 +213,5 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
         {
             logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
         }
-    }
-    
-    /// <summary>
-    /// Allows to peek at the next message in the inbox without removing it.
-    /// </summary>
-    /// <param name="message"></param>
-    /// <returns></returns>
-    public bool TryPeek(out TRequest? message)
-    {
-        if (inbox.TryPeek(out ActorMessage<TRequest> nextMssage))
-        {
-            message = nextMssage.Request;
-            return true;
-        }
-
-        message = null;
-        return false;
-    }
-    
-    /// <summary>
-    /// Allows to dequeue the next message in the inbox.
-    /// </summary>
-    /// <param name="message"></param>
-    /// <returns></returns>
-    public bool TryDequeue(out TRequest? message)
-    {
-        if (inbox.TryDequeue(out ActorMessage<TRequest> nextMssage))
-        {
-            message = nextMssage.Request;
-            return true;
-        }
-
-        message = null;
-        return false;
     }
 }

@@ -30,7 +30,7 @@ public sealed class PingActor : IActor<string, string>
         return receivedMessages;
     }
 
-    public void IncrMessage()
+    private void IncrMessage()
     {
         receivedMessages++;
     }

@@ -10,8 +10,9 @@ namespace Nixie;
 /// </summary>
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
-public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositoryRunnable 
-    where TActor : IActorAggregate<TRequest> where TRequest : class
+/// <typeparam name="TResponse"></typeparam>
+public sealed class ActorRepositoryAggregate<TActor, TRequest, TResponse> : IActorRepositoryRunnable 
+    where TActor : IActorAggregate<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     private readonly ActorSystem actorSystem;
 
@@ -19,7 +20,7 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
 
     private readonly ILogger? logger;
 
-    private readonly ConcurrentDictionary<string, Lazy<(ActorRunnerAggregate<TActor, TRequest>, ActorRefAggregate<TActor, TRequest>)>> actors = new();
+    private readonly ConcurrentDictionary<string, Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse>, ActorRefAggregate<TActor, TRequest, TResponse>)>> actors = new();
 
     /// <summary>
     /// Constructor
@@ -40,13 +41,13 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
     /// <returns></returns>
     public bool HasPendingMessages(out string? actorName)
     {        
-        foreach (KeyValuePair<string, Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)>> actor in actors)
+        foreach (KeyValuePair<string, Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)>> actor in actors)
         {
-            Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)> lazyValue = actor.Value;
+            Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)> lazyValue = actor.Value;
 
             if (lazyValue.IsValueCreated)
             {
-                ActorRunnerAggregate<TActor, TRequest> runner = lazyValue.Value.runner;
+                ActorRunnerAggregate<TActor, TRequest, TResponse> runner = lazyValue.Value.runner;
 
                 if (!runner.IsShutdown && !lazyValue.Value.runner.IsEmpty)
                 {
@@ -67,13 +68,13 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
     /// <returns></returns>
     public bool IsProcessing(out string? actorName)
     {
-        foreach (KeyValuePair<string, Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)>> actor in actors)
+        foreach (KeyValuePair<string, Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)>> actor in actors)
         {
-            Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)> lazyValue = actor.Value;
+            Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)> lazyValue = actor.Value;
 
             if (lazyValue.IsValueCreated)
             {
-                ActorRunnerAggregate<TActor, TRequest> runner = lazyValue.Value.runner;
+                ActorRunnerAggregate<TActor, TRequest, TResponse> runner = lazyValue.Value.runner;
 
                 if (runner is { IsShutdown: false, IsProcessing: true })
                 {
@@ -94,7 +95,7 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
     /// <param name="args"></param>
     /// <returns></returns>
     /// <exception cref="NixieException"></exception>
-    public IActorRefAggregate<TActor, TRequest> Spawn(string? name = null, params object[]? args)
+    public IActorRefAggregate<TActor, TRequest, TResponse> Spawn(string? name = null, params object[]? args)
     {
         if (!string.IsNullOrEmpty(name))
         {
@@ -108,7 +109,7 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
             name = Guid.NewGuid().ToString();
         }
 
-        Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)> actor = actors.GetOrAdd(
+        Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)> actor = actors.GetOrAdd(
             name,
             (string _) => new(() => CreateInternal(name, args))
         );
@@ -116,16 +117,16 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
         return actor.Value.actorRef;
     }
 
-    private (ActorRunnerAggregate<TActor, TRequest>, ActorRefAggregate<TActor, TRequest>) CreateInternal(string name, params object[]? args)
+    private (ActorRunnerAggregate<TActor, TRequest, TResponse>, ActorRefAggregate<TActor, TRequest, TResponse>) CreateInternal(string name, params object[]? args)
     {
-        ActorRunnerAggregate<TActor, TRequest> runner = new(actorSystem, logger, name);
+        ActorRunnerAggregate<TActor, TRequest, TResponse> runner = new(actorSystem, logger, name);
 
-        ActorRefAggregate<TActor, TRequest>? actorRef = (ActorRefAggregate<TActor, TRequest>?)Activator.CreateInstance(typeof(ActorRefAggregate<TActor, TRequest>), runner);
+        ActorRefAggregate<TActor, TRequest, TResponse>? actorRef = (ActorRefAggregate<TActor, TRequest, TResponse>?)Activator.CreateInstance(typeof(ActorRefAggregate<TActor, TRequest, TResponse>), runner);
 
         if (actorRef is null)
             throw new NixieException("Invalid actor props");
 
-        ActorAggregateContext<TActor, TRequest> actorContext = new(actorSystem, logger, actorRef);
+        ActorAggregateContext<TActor, TRequest, TResponse> actorContext = new(actorSystem, logger, actorRef);
 
         TActor? actor;
 
@@ -165,11 +166,11 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public IActorRefAggregate<TActor, TRequest>? Get(string name)
+    public IActorRefAggregate<TActor, TRequest, TResponse>? Get(string name)
     {
         name = name.ToLowerInvariant();
 
-        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)>? actor))
+        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)>? actor))
             return actor.Value.actorRef;
 
         return null;
@@ -184,7 +185,7 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
     {
         name = name.ToLowerInvariant();
 
-        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)>? actor))
+        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)>? actor))
         {
             if (actor.Value.runner.Shutdown())
             {
@@ -202,11 +203,11 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
     /// </summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public bool Shutdown(IActorAggregateRef<TActor, TRequest> actorRef)
+    public bool Shutdown(IActorRefAggregate<TActor, TRequest, TResponse> actorRef)
     {
         string name = actorRef.Runner.Name;
 
-        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)>? actor))
+        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)>? actor))
         {
             if (actor.Value.runner.Shutdown())
             {
@@ -229,7 +230,7 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
     {
         name = name.ToLowerInvariant();
 
-        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)>? actor))
+        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)>? actor))
         {
             bool result = await actor.Value.runner.GracefulShutdown(maxWait);
             //actorSystem.StopAllTimers(actor.Value.actorRef);
@@ -246,11 +247,11 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest> : IActorRepositor
     /// <param name="actorRef"></param>
     /// <param name="maxWait"></param>
     /// <returns></returns>
-    public async Task<bool> GracefulShutdown(IActorAggregateRef<TActor, TRequest> actorRef, TimeSpan maxWait)
+    public async Task<bool> GracefulShutdown(IActorRefAggregate<TActor, TRequest, TResponse> actorRef, TimeSpan maxWait)
     {
         string name = actorRef.Runner.Name;
 
-        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest> runner, ActorRefAggregate<TActor, TRequest> actorRef)>? actor))
+        if (actors.TryGetValue(name, out Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)>? actor))
         {
             bool success = await actor.Value.runner.GracefulShutdown(maxWait);
             //actorSystem.StopAllTimers(actor.Value.actorRef);

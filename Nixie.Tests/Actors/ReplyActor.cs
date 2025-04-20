@@ -12,10 +12,7 @@ public sealed class ReplyActor : IActor<string, string>
 
     public int GetMessages(string id)
     {
-        if (receivedMessages.TryGetValue(id, out int number))
-            return number;
-
-        return 0;
+        return receivedMessages.GetValueOrDefault(id, 0);
     }
 
     public void IncrMessage(string id)

@@ -1,4 +1,5 @@
 ﻿
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 namespace Nixie.Routers;
 
 /// <summary>
