@@ -12,13 +12,10 @@ public sealed class FireAndForgetActorStruct : IActorStruct<int>
 
     public int GetMessages(int id)
     {
-        if (receivedMessages.TryGetValue(id, out int number))
-            return number;
-
-        return 0;
+        return receivedMessages.GetValueOrDefault(id, 0);
     }
 
-    public void IncrMessage(int id)
+    private void IncrMessage(int id)
     {
         if (!receivedMessages.TryGetValue(id, out int value))
             receivedMessages.Add(id, 1);
