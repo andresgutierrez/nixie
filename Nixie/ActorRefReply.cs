@@ -1,6 +1,4 @@
 ﻿
-using DotNext.Threading.Tasks;
-
 namespace Nixie;
 
 /// <summary>
@@ -64,9 +62,9 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <returns></returns>    
     public async Task<TResponse?> Ask(TRequest message)
     {
-        ValueTaskCompletionSource<TResponse?> promise = runner.SendAndTryDeliver(message, null, null);
+        TaskCompletionSource<TResponse?> promise = runner.SendAndTryDeliver(message, null, null);
 
-        return await promise.CreateTask(TimeSpan.FromHours(1), default);
+        return await promise.Task;
     }
 
     /// <summary>
@@ -81,9 +79,9 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     {
         using CancellationTokenSource timeoutCancellationTokenSource = new();
 
-        ValueTaskCompletionSource<TResponse?> completionSource = runner.SendAndTryDeliver(message, null, null);
+        TaskCompletionSource<TResponse?> completionSource = runner.SendAndTryDeliver(message, null, null);
 
-        Task<TResponse?> task = completionSource.CreateTask(TimeSpan.FromHours(1), default).AsTask();
+        Task<TResponse?> task = completionSource.Task;
 
         Task completedTask = await Task.WhenAny(
             task,
@@ -107,9 +105,9 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     /// <returns></returns>
     public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender)
     {
-        ValueTaskCompletionSource<TResponse?> promise = runner.SendAndTryDeliver(message, sender, null);
+        TaskCompletionSource<TResponse?> promise = runner.SendAndTryDeliver(message, sender, null);
 
-        return await promise.CreateTask(TimeSpan.FromHours(1), default);
+        return await promise.Task;
     }
 
     /// <summary>
@@ -125,9 +123,9 @@ public sealed class ActorRef<TActor, TRequest, TResponse> : IGenericActorRef, IA
     {
         using CancellationTokenSource timeoutCancellationTokenSource = new();
 
-        ValueTaskCompletionSource<TResponse?> completionSource = runner.SendAndTryDeliver(message, sender, null);
+        TaskCompletionSource<TResponse?> completionSource = runner.SendAndTryDeliver(message, sender, null);
 
-        Task<TResponse?> task = completionSource.CreateTask(TimeSpan.FromHours(1), default).AsTask();
+        Task<TResponse?> task = completionSource.Task;
 
         Task completedTask = await Task.WhenAny(
             task,

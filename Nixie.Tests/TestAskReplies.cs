@@ -1,4 +1,6 @@
 ﻿
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Nixie.Tests.Actors;
 
@@ -20,6 +22,20 @@ public class TestAskReplies
 
         Assert.Equal(1, ((ReplyActor)actor.Runner.Actor!).GetMessages("TestSendMessageToSingleActor"));
     }
+    
+    [Fact]
+    public async Task TestAskMessageToSingleActorAggregate()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefAggregate<ReplyAggregateActor, string, string> actor = asx.SpawnAggregate<ReplyAggregateActor, string, string>();
+
+        string? reply = await actor.Ask("TestSendMessageToSingleActor");
+        Assert.NotNull(reply);
+        Assert.Equal("TestSendMessageToSingleActor", reply);
+
+        Assert.Equal(1, ((ReplyAggregateActor)actor.Runner.Actor!).GetMessages("TestSendMessageToSingleActor"));
+    }
 
     [Fact]
     public async Task TestAskMessageToSingleActorWithTimeout()
@@ -33,6 +49,20 @@ public class TestAskReplies
         Assert.Equal("TestSendMessageToSingleActor", reply);
 
         Assert.Equal(1, ((ReplyActor)actor.Runner.Actor!).GetMessages("TestSendMessageToSingleActor"));
+    }
+    
+    [Fact]
+    public async Task TestAskMessageToSingleActorWithTimeoutAggregate()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefAggregate<ReplyAggregateActor, string, string> actor = asx.SpawnAggregate<ReplyAggregateActor, string, string>();
+
+        string? reply = await actor.Ask("TestSendMessageToSingleActor", TimeSpan.FromSeconds(5));
+        Assert.NotNull(reply);
+        Assert.Equal("TestSendMessageToSingleActor", reply);
+
+        Assert.Equal(1, ((ReplyAggregateActor)actor.Runner.Actor!).GetMessages("TestSendMessageToSingleActor"));
     }
 
     [Fact]
@@ -56,6 +86,29 @@ public class TestAskReplies
 
         for (int i = 0; i < 10; i++)
             Assert.Equal(1, ((ReplyActor)actorRefs[i].Runner.Actor!).GetMessages("TestCreateMultipleActorsAndAskOneMessage"));
+    }
+    
+    [Fact]
+    public async Task TestCreateMultipleActorsAndAskOneMessageAggregate()
+    {
+        using ActorSystem asx = new();
+
+        IActorRefAggregate<ReplyAggregateActor, string, string>[] actorRefs = new IActorRefAggregate<ReplyAggregateActor, string, string>[10];
+
+        for (int i = 0; i < 10; i++)
+            actorRefs[i] = asx.SpawnAggregate<ReplyAggregateActor, string, string>();
+
+        for (int i = 0; i < 10; i++)
+        {
+            string? response = await actorRefs[i].Ask("TestCreateMultipleActorsAndAskOneMessage");
+            Assert.NotNull(response);
+            Assert.Equal("TestCreateMultipleActorsAndAskOneMessage", response);
+        }
+
+        await asx.Wait();
+
+        for (int i = 0; i < 10; i++)
+            Assert.Equal(1, ((ReplyAggregateActor)actorRefs[i].Runner.Actor!).GetMessages("TestCreateMultipleActorsAndAskOneMessage"));
     }
 
     [Fact]
@@ -144,7 +197,7 @@ public class TestAskReplies
             Assert.Equal(1, ((PingActor)actorRefs[i].Runner.Actor!).GetMessages());
     }
 
-    private async Task AskPingPong(IActorRef<PingActor, string, string> pingRef, int i)
+    private static async Task AskPingPong(IActorRef<PingActor, string, string> pingRef, int i)
     {
         string expected = "TestAskPingPong" + i;
 
@@ -154,7 +207,7 @@ public class TestAskReplies
     }
 
     [Fact]
-    public async Task TestCreateMultiplePingPingAndAskRace()
+    public async Task TestCreateMultiplePingPongAndAskRace()
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
         {
@@ -183,7 +236,7 @@ public class TestAskReplies
             Assert.Equal(1, ((PingActor)actorRefs[i].Runner.Actor!).GetMessages());
     }
 
-    private async Task AskPingPongMultiple(IActorRef<PingActor, string, string> pingRef, int i)
+    private static async Task AskPingPongMultiple(IActorRef<PingActor, string, string> pingRef, int i)
     {
         string expected = "TestAskPingPong" + i;
 
@@ -193,6 +246,45 @@ public class TestAskReplies
             Assert.NotNull(response);
             Assert.Equal(expected, response);
         }
+    }
+    
+    [Fact]
+    public async Task TestCreateMultiplePingPongAndAskRaceAggregate()
+    {
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+        {
+            builder
+                .AddFilter("Nixie", LogLevel.Debug)
+                .AddConsole();
+        });
+
+        using ActorSystem asx = new(logger: loggerFactory.CreateLogger<TestSendMessages>());
+
+        IActorRefAggregate<PingAggregateActor, string, string>[] actorRefs = new IActorRefAggregate<PingAggregateActor, string, string>[100];
+
+        for (int i = 0; i < 100; i++)
+            actorRefs[i] = asx.SpawnAggregate<PingAggregateActor, string, string>();
+
+        Task[] tasks = new Task[100];
+
+        for (int i = 0; i < 100; i++)
+            tasks[i] = AskPingPongAggregate(actorRefs[i], i);
+
+        await Task.WhenAll(tasks);
+
+        await asx.Wait();
+
+        for (int i = 0; i < 100; i++)
+            Assert.Equal(1, ((PingAggregateActor)actorRefs[i].Runner.Actor!).GetMessages());
+    }
+    
+    private static async Task AskPingPongAggregate(IActorRefAggregate<PingAggregateActor, string, string> pingRef, int i)
+    {
+        string expected = "TestAskPingPong" + i;
+
+        string? response = await pingRef.Ask(expected, TimeSpan.FromSeconds(2));
+        Assert.NotNull(response);
+        Assert.Equal(expected, response);
     }
 
     [Fact]

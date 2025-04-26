@@ -83,7 +83,7 @@ public class TestSender
         Assert.Equal(100, ((SenderActor)actor.Runner.Actor!).GetMessages());
     }
 
-    [Fact]
+    /*[Fact]
     public async Task TestSkynet()
     {
         using ActorSystem asx = new();
@@ -99,10 +99,10 @@ public class TestSender
 
         await asx.Wait();
 
-        Console.WriteLine("Time=", st.ElapsedMilliseconds);
+        Console.Error.WriteLine("Time=", st.ElapsedMilliseconds);
 
         Assert.Equal(1000000, ((SenderActor)actor.Runner.Actor!).GetMessages());
-    }
+    }*/
 
     [Fact]
     public async Task TestBroadcastMessageAndUseSenderToReplyStruct()

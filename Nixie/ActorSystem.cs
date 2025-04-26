@@ -69,7 +69,7 @@ public sealed class ActorSystem : IDisposable
     /// <param name="name"></param>
     /// <param name="args"></param>
     /// <returns></returns>
-    public IActorAggregateRef<TActor, TRequest> SpawnAggregate<TActor, TRequest>(string? name = null, params object[]? args)
+    public IActorRefAggregate<TActor, TRequest> SpawnAggregate<TActor, TRequest>(string? name = null, params object[]? args)
         where TActor : IActorAggregate<TRequest> where TRequest : class
     {
         ActorRepositoryAggregate<TActor, TRequest> repository = GetRepositoryAggregate<TActor, TRequest>();
@@ -122,6 +122,23 @@ public sealed class ActorSystem : IDisposable
         where TActor : IActorStruct<TRequest> where TRequest : struct
     {
         ActorRepositoryStruct<TActor, TRequest> repository = GetRepositoryStruct<TActor, TRequest>();
+
+        return repository.Spawn(name, args);
+    }
+    
+    /// <summary>
+    /// Creates a new request/response aggregate actor and returns a typed reference.
+    /// Aggreate actors receive a batch of messages and process them in a single execution instead of one by one.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <param name="name"></param>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public IActorRefAggregate<TActor, TRequest, TResponse> SpawnAggregate<TActor, TRequest, TResponse>(string? name = null, params object[]? args)
+        where TActor : IActorAggregate<TRequest, TResponse> where TRequest : class where TResponse : class?
+    {
+        ActorRepositoryAggregate<TActor, TRequest, TResponse> repository = GetRepositoryAggregate<TActor, TRequest, TResponse>();
 
         return repository.Spawn(name, args);
     }
@@ -531,6 +548,36 @@ public sealed class ActorSystem : IDisposable
         where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
     {
         ActorRepositoryStruct<TActor, TRequest, TResponse> repository = new(this, serviceProvider, logger);
+        return repository;
+    }
+    
+    /// <summary>
+    /// Returns the repository where the current references to fire-n-forget actors are stored.
+    /// </summary>
+    /// <typeparam name="TActor"></typeparam>
+    /// <typeparam name="TRequest"></typeparam>
+    /// <returns></returns>
+    public ActorRepositoryAggregate<TActor, TRequest, TResponse> GetRepositoryAggregate<TActor, TRequest, TResponse>()
+        where TActor : IActorAggregate<TRequest, TResponse> where TRequest : class where TResponse : class?
+    {
+        Lazy<IActorRepositoryRunnable> repository = repositories.GetOrAdd(
+            typeof(TActor),
+            CreateRepositoryInternalAggregate<TActor, TRequest, TResponse>
+        );
+
+        return (ActorRepositoryAggregate<TActor, TRequest, TResponse>)repository.Value;
+    }
+    
+    private Lazy<IActorRepositoryRunnable> CreateRepositoryInternalAggregate<TActor, TRequest, TResponse>(Type type)
+        where TActor : IActorAggregate<TRequest, TResponse> where TRequest : class where TResponse : class?
+    {
+        return new(CreateRepositoryBuilderAggreggate<TActor, TRequest, TResponse>);
+    }
+    
+    private ActorRepositoryAggregate<TActor, TRequest, TResponse> CreateRepositoryBuilderAggreggate<TActor, TRequest, TResponse>()
+        where TActor : IActorAggregate<TRequest, TResponse> where TRequest : class where TResponse : class?
+    {
+        ActorRepositoryAggregate<TActor, TRequest, TResponse> repository = new(this, serviceProvider, logger);
         return repository;
     }
 

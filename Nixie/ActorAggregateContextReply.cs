@@ -7,8 +7,8 @@ namespace Nixie;
 /// Represents an actor context. This class is passed to the actor when it is created.
 /// It can be used to create other actors or get the sender and the actor system.
 /// </summary>
-public sealed class ActorAggregateContext<TActor, TRequest> : IActorAggregateContext<TActor, TRequest>
-    where TActor : IActorAggregate<TRequest> where TRequest : class
+public sealed class ActorAggregateContext<TActor, TRequest, TResponse> : IActorAggregateContext<TActor, TRequest, TResponse>
+    where TActor : IActorAggregate<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     /// <summary>
     /// Returns the actor system
@@ -21,9 +21,9 @@ public sealed class ActorAggregateContext<TActor, TRequest> : IActorAggregateCon
     public ILogger? Logger { get; }
 
     /// <summary>
-    /// Returns a reference to the current actor
+    /// Returns the actor reference
     /// </summary>
-    public ActorRefAggregate<TActor, TRequest> Self { get; }
+    public ActorRefAggregate<TActor, TRequest, TResponse> Self { get; }
 
     /// <summary>
     /// Returns a reference to the sender of the message
@@ -31,9 +31,20 @@ public sealed class ActorAggregateContext<TActor, TRequest> : IActorAggregateCon
     public IGenericActorRef? Sender { get; set; }
 
     /// <summary>
+    /// Returns a reference to the current reply object
+    /// </summary>
+    public ActorMessageReply<TRequest, TResponse>? Reply { get; set; }
+
+    /// <summary>
+    /// Indicates if the response of the current invocation must be by passed
+    /// to allow other consumer to set the response
+    /// </summary>
+    public bool ByPassReply { get; set; }
+
+    /// <summary>
     /// Returns the actor runner
     /// </summary>
-    public ActorRunnerAggregate<TActor, TRequest>? Runner { get; set; }
+    public ActorRunnerAggregate<TActor, TRequest, TResponse>? Runner { get; set; }
 
     /// <summary>
     /// Event that is triggered when the actor is shutdown
@@ -46,7 +57,7 @@ public sealed class ActorAggregateContext<TActor, TRequest> : IActorAggregateCon
     /// <param name="actorSystem"></param>
     /// <param name="logger"></param>
     /// <param name="self"></param>
-    public ActorAggregateContext(ActorSystem actorSystem, ILogger? logger, ActorRefAggregate<TActor, TRequest> self)
+    public ActorAggregateContext(ActorSystem actorSystem, ILogger? logger, ActorRefAggregate<TActor, TRequest, TResponse> self)
     {
         ActorSystem = actorSystem;
         Logger = logger;

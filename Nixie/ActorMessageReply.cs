@@ -1,5 +1,4 @@
-﻿using DotNext.Threading.Tasks;
-
+﻿
 namespace Nixie;
 
 /// <summary>
@@ -27,7 +26,7 @@ public readonly struct ActorMessageReply<TRequest, TResponse>
     /// <summary>
     /// Returns the task completion source of the reply
     /// </summary>
-    public ValueTaskCompletionSource<TResponse?> Promise { get; }
+    public TaskCompletionSource<TResponse?> Promise { get; }
 
     /// <summary>
     /// Constructor
@@ -35,7 +34,7 @@ public readonly struct ActorMessageReply<TRequest, TResponse>
     /// <param name="request"></param>
     /// <param name="sender"></param>
     /// <param name="promise"></param>
-    public ActorMessageReply(TRequest request, IGenericActorRef? sender, ValueTaskCompletionSource<TResponse?> promise)
+    public ActorMessageReply(TRequest request, IGenericActorRef? sender, TaskCompletionSource<TResponse?> promise)
     {
         Request = request;
         Sender = sender;

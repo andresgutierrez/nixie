@@ -1,4 +1,4 @@
-﻿
+
 namespace Nixie;
 
 /// <summary>
@@ -7,23 +7,21 @@ namespace Nixie;
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
-public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorRef, IActorRefStruct<TActor, TRequest, TResponse>
-    where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+public sealed class ActorRefAggregate<TActor, TRequest, TResponse> : IGenericActorRef, IActorRefAggregate<TActor, TRequest, TResponse>
+    where TActor : IActorAggregate<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
-    private readonly ActorRunnerStruct<TActor, TRequest, TResponse> runner;
-
     /// <summary>
     /// Returns a reference to the actor's runner
     /// </summary>
-    public ActorRunnerStruct<TActor, TRequest, TResponse> Runner => runner;
+    public ActorRunnerAggregate<TActor, TRequest, TResponse> Runner { get; }
 
     /// <summary>
     /// Constructor
     /// </summary>
     /// <param name="runner"></param>
-    public ActorRefStruct(ActorRunnerStruct<TActor, TRequest, TResponse> runner)
+    public ActorRefAggregate(ActorRunnerAggregate<TActor, TRequest, TResponse> runner)
     {
-        this.runner = runner;
+        Runner = runner;
     }
 
     /// <summary>
@@ -32,7 +30,7 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     /// <param name="message"></param>
     public void Send(TRequest message)
     {
-        runner.SendAndTryDeliver(message, null, null);
+        Runner.SendAndTryDeliver(message, null, null);
     }
 
     /// <summary>
@@ -42,7 +40,7 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     /// <param name="sender"></param>
     public void Send(TRequest message, IGenericActorRef sender)
     {
-        runner.SendAndTryDeliver(message, sender, null);
+        Runner.SendAndTryDeliver(message, sender, null);
     }
 
     /// <summary>
@@ -52,7 +50,7 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     /// <param name="parentPromise"></param>
     public void Send(TRequest message, ActorMessageReply<TRequest, TResponse>? parentPromise)
     {
-        runner.SendAndTryDeliver(message, null, parentPromise);
+        Runner.SendAndTryDeliver(message, null, parentPromise);
     }
 
     /// <summary>
@@ -60,9 +58,9 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>    
-    public async Task<TResponse> Ask(TRequest message)
+    public async Task<TResponse?> Ask(TRequest message)
     {
-        TaskCompletionSource<TResponse> promise = runner.SendAndTryDeliver(message, null, null);
+        TaskCompletionSource<TResponse?> promise = Runner.SendAndTryDeliver(message, null, null);
 
         return await promise.Task;
     }
@@ -75,14 +73,14 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     /// <param name="timeout"></param>
     /// <returns></returns>
     /// <exception cref="AskTimeoutException"></exception>
-    public async Task<TResponse> Ask(TRequest message, TimeSpan timeout)
+    public async Task<TResponse?> Ask(TRequest message, TimeSpan timeout)
     {
         using CancellationTokenSource timeoutCancellationTokenSource = new();
 
-        TaskCompletionSource<TResponse> completionSource = runner.SendAndTryDeliver(message, null, null);
+        TaskCompletionSource<TResponse?> completionSource = Runner.SendAndTryDeliver(message, null, null);
 
-        Task<TResponse> task = completionSource.Task;
-        
+        Task<TResponse?> task = completionSource.Task;
+
         Task completedTask = await Task.WhenAny(
             task,
             Task.Delay(timeout, timeoutCancellationTokenSource.Token)
@@ -103,9 +101,9 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     /// <param name="message"></param>
     /// <param name="sender"></param>
     /// <returns></returns>
-    public async Task<TResponse> Ask(TRequest message, IGenericActorRef sender)
+    public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender)
     {
-        TaskCompletionSource<TResponse> promise = runner.SendAndTryDeliver(message, sender, null);
+        TaskCompletionSource<TResponse?> promise = Runner.SendAndTryDeliver(message, sender, null);
 
         return await promise.Task;
     }
@@ -119,13 +117,13 @@ public sealed class ActorRefStruct<TActor, TRequest, TResponse> : IGenericActorR
     /// <param name="timeout"></param>
     /// <returns></returns>
     /// <exception cref="AskTimeoutException"></exception>
-    public async Task<TResponse> Ask(TRequest message, IGenericActorRef sender, TimeSpan timeout)
+    public async Task<TResponse?> Ask(TRequest message, IGenericActorRef sender, TimeSpan timeout)
     {
         using CancellationTokenSource timeoutCancellationTokenSource = new();
 
-        TaskCompletionSource<TResponse> completionSource = runner.SendAndTryDeliver(message, sender, null);
+        TaskCompletionSource<TResponse?> completionSource = Runner.SendAndTryDeliver(message, sender, null);
 
-        Task<TResponse> task = completionSource.Task;
+        Task<TResponse?> task = completionSource.Task;
 
         Task completedTask = await Task.WhenAny(
             task,

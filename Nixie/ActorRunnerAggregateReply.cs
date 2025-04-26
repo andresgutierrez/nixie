@@ -1,4 +1,4 @@
-﻿
+
 using System.Collections.Concurrent;
 using DotNext.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -11,14 +11,17 @@ namespace Nixie;
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
-public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor : IActorStruct<TRequest, TResponse> where TRequest : struct where TResponse : struct
+public sealed class ActorRunnerAggregate<TActor, TRequest, TResponse> 
+    where TActor : IActorAggregate<TRequest, TResponse> where TRequest : class where TResponse : class?
 {
     private readonly ActorSystem actorSystem;
 
     private readonly ILogger? logger;
 
     private readonly ConcurrentQueue<ActorMessageReply<TRequest, TResponse>> inbox = new();
-
+    
+    private readonly List<ActorMessageReply<TRequest, TResponse>> messages = [];
+    
     private TaskCompletionSource? gracefulShutdown;
 
     private int processing = 1;
@@ -43,12 +46,12 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
     /// <summary>
     /// The reference to the actor.
     /// </summary>
-    public IActorStruct<TRequest, TResponse>? Actor { get; set; }
+    public IActorAggregate<TRequest, TResponse>? Actor { get; set; }
 
     /// <summary>
     /// Reference to the current actor context
     /// </summary>
-    public ActorContextStruct<TActor, TRequest, TResponse>? ActorContext { get; set; }
+    public ActorAggregateContext<TActor, TRequest, TResponse>? ActorContext { get; set; }
 
     /// <summary>
     /// True if the actor is processing a message.
@@ -66,7 +69,7 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
     /// <param name="actorSystem"></param>
     /// <param name="logger"></param>
     /// <param name="name"></param>
-    public ActorRunnerStruct(ActorSystem actorSystem, ILogger? logger, string name)
+    public ActorRunnerAggregate(ActorSystem actorSystem, ILogger? logger, string name)
     {
         this.actorSystem = actorSystem;
         this.logger = logger;
@@ -82,9 +85,9 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
     /// <param name="sender"></param>
     /// <param name="parentReply"></param>
     /// <returns></returns>
-    public TaskCompletionSource<TResponse> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
+    public TaskCompletionSource<TResponse?> SendAndTryDeliver(TRequest message, IGenericActorRef? sender, ActorMessageReply<TRequest, TResponse>? parentReply)
     {
-        TaskCompletionSource<TResponse> promise = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<TResponse?> promise = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         ActorMessageReply<TRequest, TResponse> messageReply = parentReply ?? new(message, sender, promise);
 
@@ -137,7 +140,7 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
             timeout,
             gracefulShutdown.Task
         );
-
+        
         if (completed == timeout)
             Shutdown();
 
@@ -158,42 +161,51 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
                 gracefulShutdown?.SetResult();
                 return;
             }
+            
+            messages.Clear();
 
             ActorContext.Runner = this;
-
+            
             do
             {
-                while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
+                do
                 {
-                    if (shutdown == 0 || ActorContext is null)
+                    if (shutdown == 0)
                         break;
 
-                    if (message.Sender is not null)
-                        ActorContext.Sender = message.Sender;
-                    else
-                        ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
-
-                    ActorContext.Reply = message;
-                    ActorContext.ByPassReply = false;
-
-                    try
+                    while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
                     {
-                        TResponse response = await Actor.Receive(message.Request);
+                        if (shutdown == 0)
+                            break;
 
-                        if (!ActorContext.ByPassReply)
+                        if (ActorContext is not null)
                         {
-                            message.Promise.TrySetResult(response);
-                            //Console.WriteLine("set result");
+                            if (message.Sender is not null)
+                                ActorContext.Sender = message.Sender;
+                            else
+                                ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        message.Promise.TrySetResult(default);
 
-                        logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+                        messages.Add(message);
                     }
-                }
-            } while (shutdown == 1 && (Interlocked.CompareExchange(ref processing, 1, 0) != 0));
+
+                    if (messages.Count > 0 && shutdown == 1)
+                    {
+                        try
+                        {
+                            await Actor.Receive(messages);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+                        }
+
+                        messages.Clear();
+                    }
+
+                } while (!inbox.IsEmpty);
+                
+            } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
 
             gracefulShutdown?.SetResult();
         }

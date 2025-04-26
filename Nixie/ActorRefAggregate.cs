@@ -1,3 +1,4 @@
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 namespace Nixie;
 
 /// <summary>
@@ -5,7 +6,7 @@ namespace Nixie;
 /// </summary>
 /// <typeparam name="TActor"></typeparam>
 /// <typeparam name="TRequest"></typeparam>
-public sealed class ActorAggregateRef<TActor, TRequest> : IGenericActorRef, IActorAggregateRef<TActor, TRequest>
+public sealed class ActorRefAggregate<TActor, TRequest> : IGenericActorRef, IActorRefAggregate<TActor, TRequest>
     where TActor : IActorAggregate<TRequest> where TRequest : class
 {
     private readonly ActorRunnerAggregate<TActor, TRequest> runner;
@@ -19,7 +20,7 @@ public sealed class ActorAggregateRef<TActor, TRequest> : IGenericActorRef, IAct
     /// Constructor
     /// </summary>
     /// <param name="runner"></param>
-    public ActorAggregateRef(ActorRunnerAggregate<TActor, TRequest> runner)
+    public ActorRefAggregate(ActorRunnerAggregate<TActor, TRequest> runner)
     {
         this.runner = runner;
     }
