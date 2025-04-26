@@ -94,10 +94,24 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
             return promise;
         }
 
-        inbox.Enqueue(messageReply);
+        //inbox.Enqueue(messageReply);
 
+        //if (1 == Interlocked.Exchange(ref processing, 0))
+        //    Task.Run(DeliverMessages);
+        
         if (1 == Interlocked.Exchange(ref processing, 0))
-            _ = DeliverMessages();
+        {
+            if (inbox.IsEmpty)
+                _ = DeliverSingleMessage(messageReply);
+            else
+            {
+                inbox.Enqueue(messageReply);
+                
+                _ = DeliverMessages();
+            }
+        }
+        else
+            inbox.Enqueue(messageReply);
 
         return promise;
     }
@@ -196,6 +210,117 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
         }
         catch (Exception ex)
         {
+            logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            //Console.Error.WriteLine(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// It retrieves a message from the inbox and invokes the actor by passing one message 
+    /// at a time until the pending message list is cleared.
+    /// </summary>
+    /// <returns></returns>
+    private async Task DeliverSingleMessage(ActorMessageReply<TRequest, TResponse> singleMessage)
+    {
+        try
+        {
+            if (Actor is null || ActorContext is null || shutdown == 0)
+            {
+                gracefulShutdown?.SetResult();
+                return;
+            }
+
+            ActorContext.Runner = this;
+            
+            if (singleMessage.Sender is not null)
+                ActorContext.Sender = singleMessage.Sender;
+            else
+                ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+
+            ActorContext.Reply = singleMessage;
+            ActorContext.ByPassReply = false;
+
+            try
+            {
+                TResponse? response = await Actor.Receive(singleMessage.Request);
+
+                if (!ActorContext.ByPassReply)
+                    singleMessage.Promise.TrySetResult(response);
+            }
+            catch (Exception ex)
+            {
+                singleMessage.Promise.TrySetResult(null);
+
+                logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+            }
+
+            do
+            {
+                while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
+                {
+                    if (shutdown == 0 || ActorContext is null)
+                        break;
+
+                    if (message.Sender is not null)
+                        ActorContext.Sender = message.Sender;
+                    else
+                        ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+
+                    ActorContext.Reply = message;
+                    ActorContext.ByPassReply = false;
+
+                    try
+                    {
+                        TResponse? response = await Actor.Receive(message.Request);
+
+                        if (!ActorContext.ByPassReply)
+                            message.Promise.TrySetResult(response);
+                    }
+                    catch (Exception ex)
+                    {
+                        message.Promise.TrySetResult(null);
+
+                        logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+                    }
+                }
+            } while (shutdown == 1 && (Interlocked.CompareExchange(ref processing, 1, 0) != 0));
+
+            gracefulShutdown?.SetResult();
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            // Console.Error.WriteLine(ex.Message);
+        }
+    }
+
+    private async Task DeliverMessageInternal(
+        ActorContext<TActor, TRequest, TResponse> actorContext, 
+        IActor<TRequest, TResponse> actor,
+        ActorMessageReply<TRequest, TResponse> message
+    )
+    {
+        if (message.Sender is not null)
+            actorContext.Sender = message.Sender;
+        else
+            actorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+
+        actorContext.Reply = message;
+        actorContext.ByPassReply = false;
+
+        try
+        {
+            TResponse? response = await actor.Receive(message.Request);
+
+            if (!actorContext.ByPassReply)
+                message.Promise.TrySetResult(response);
+        }
+        catch (Exception ex)
+        {
+            message.Promise.TrySetResult(null);
+
             logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
         }
     }

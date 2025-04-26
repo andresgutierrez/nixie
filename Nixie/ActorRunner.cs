@@ -5,10 +5,11 @@ using Microsoft.Extensions.Logging;
 namespace Nixie;
 
 /// <summary>
-/// Passes a message to the active actor reference making sure only one message is processed at a time.
+/// Represents a runner for coordinating the lifecycle and message delivery for a specific actor instance.
+/// This class manages an actor's message queue and controls the processing state and shutdown behavior.
 /// </summary>
-/// <typeparam name="TActor"></typeparam>
-/// <typeparam name="TRequest"></typeparam>
+/// <typeparam name="TActor">The type of the actor that implements the <see cref="IActor{TRequest}"/> interface.</typeparam>
+/// <typeparam name="TRequest">The type of the message that the actor processes.</typeparam>
 public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest> where TRequest : class
 {
     private readonly ActorSystem actorSystem;
@@ -81,11 +82,25 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
     {
         if (shutdown == 0)
             return;
-
-        inbox.Enqueue(new(message, sender));
+        
+        /*inbox.Enqueue(new(message, sender));
+                
+        if (1 == Interlocked.Exchange(ref processing, 0))
+            _ = DeliverMessages();*/
 
         if (1 == Interlocked.Exchange(ref processing, 0))
-            _ = DeliverMessages();
+        {
+            if (inbox.IsEmpty)
+                _ = DeliverSingleMessage(new(message, sender));
+            else
+            {
+                inbox.Enqueue(new(message, sender));
+                
+                _ = DeliverMessages();
+            }
+        }
+        else
+            inbox.Enqueue(new(message, sender));
     }
 
     /// <summary>
@@ -172,9 +187,119 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
                         logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
                     }
                 }
-            } while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
+            } 
+            while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
 
             gracefulShutdown?.SetResult();
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+        }
+    }
+
+    /// <summary>
+    /// Processes a single message from the actor's inbox, ensuring proper delivery to the actor,
+    /// and handles conditions such as shutdown or errors during message processing.
+    /// </summary>
+    /// <param name="message">The message to be delivered, encapsulating the request and sender information.</param>
+    private async Task DeliverSingleMessage(ActorMessage<TRequest> message)
+    {
+        try
+        {
+            if (Actor is null || ActorContext is null || shutdown == 0)
+            {
+                gracefulShutdown?.SetResult();
+                return;
+            }
+
+            ActorContext.Runner = this;
+
+            //await DeliverMessageInternal(Actor, message);
+            
+            if (ActorContext is not null)
+            {
+                // last sender is assigned
+                if (message.Sender is not null)
+                    ActorContext.Sender = message.Sender;
+                else
+                    ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+            }
+
+            try
+            {
+                await Actor.Receive(message.Request);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+                
+                await System.IO.File.WriteAllTextAsync("/tmp/error.log", ex.ToString());
+            }
+
+            do
+            {
+                while (inbox.TryDequeue(out message))
+                {
+                    if (shutdown == 0)
+                        break;
+
+                    //await DeliverMessageInternal(Actor, message);
+                    
+                    if (ActorContext is not null)
+                    {
+                        // last sender is assigned
+                        if (message.Sender is not null)
+                            ActorContext.Sender = message.Sender;
+                        else
+                            ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+                    }
+
+                    try
+                    {
+                        await Actor.Receive(message.Request);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+                        
+                        await System.IO.File.WriteAllTextAsync("/tmp/error.log", ex.ToString());
+                    }
+                }
+            } 
+            while (shutdown == 1 && Interlocked.CompareExchange(ref processing, 1, 0) != 0);
+
+            gracefulShutdown?.SetResult();
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError("[{Actor}] {Exception}: {Message}\n{StackTrace}", Name, ex.GetType().Name, ex.Message, ex.StackTrace);
+            
+            await System.IO.File.WriteAllTextAsync("/tmp/error.log", ex.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Delivers a message to the actor for processing.
+    /// Ensures proper context assignment and handles exceptions during actor message processing.
+    /// </summary>
+    /// <param name="actor">The actor that will process the message.</param>
+    /// <param name="message">The message to be processed by the actor.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    private async Task DeliverMessageInternal(IActor<TRequest> actor, ActorMessage<TRequest> message)
+    {
+        if (ActorContext is not null)
+        {
+            // last sender is assigned
+            if (message.Sender is not null)
+                ActorContext.Sender = message.Sender;
+            else
+                ActorContext.Sender = (IGenericActorRef)actorSystem.Nobody;
+        }
+
+        try
+        {
+            await actor.Receive(message.Request);
         }
         catch (Exception ex)
         {
