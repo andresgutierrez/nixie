@@ -83,12 +83,12 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
         if (shutdown == 0)
             return;
         
-        /*inbox.Enqueue(new(message, sender));
+        inbox.Enqueue(new(message, sender));
                 
         if (1 == Interlocked.Exchange(ref processing, 0))
-            _ = DeliverMessages();*/
+            _ = DeliverMessages();
 
-        if (1 == Interlocked.Exchange(ref processing, 0))
+        /*if (1 == Interlocked.Exchange(ref processing, 0))
         {
             if (inbox.IsEmpty)
                 _ = DeliverSingleMessage(new(message, sender));
@@ -100,7 +100,7 @@ public sealed class ActorRunner<TActor, TRequest> where TActor : IActor<TRequest
             }
         }
         else
-            inbox.Enqueue(new(message, sender));
+            inbox.Enqueue(new(message, sender));*/
     }
 
     /// <summary>

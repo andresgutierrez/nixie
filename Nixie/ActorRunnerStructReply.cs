@@ -163,7 +163,7 @@ public sealed class ActorRunnerStruct<TActor, TRequest, TResponse> where TActor 
 
             do
             {
-                while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
+                while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse> message))
                 {
                     if (shutdown == 0 || ActorContext is null)
                         break;

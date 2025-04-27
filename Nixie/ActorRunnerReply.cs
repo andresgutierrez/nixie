@@ -94,12 +94,12 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
             return promise;
         }
 
-        //inbox.Enqueue(messageReply);
+        inbox.Enqueue(messageReply);
 
-        //if (1 == Interlocked.Exchange(ref processing, 0))
-        //    Task.Run(DeliverMessages);
-        
         if (1 == Interlocked.Exchange(ref processing, 0))
+            Task.Run(DeliverMessages);
+        
+        /*if (1 == Interlocked.Exchange(ref processing, 0))
         {
             if (inbox.IsEmpty)
                 _ = DeliverSingleMessage(messageReply);
@@ -111,7 +111,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
             }
         }
         else
-            inbox.Enqueue(messageReply);
+            inbox.Enqueue(messageReply);*/
 
         return promise;
     }
@@ -177,7 +177,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
 
             do
             {
-                while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
+                while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse> message))
                 {
                     if (shutdown == 0 || ActorContext is null)
                         break;
@@ -257,7 +257,7 @@ public sealed class ActorRunner<TActor, TRequest, TResponse> where TActor : IAct
 
             do
             {
-                while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
+                while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse> message))
                 {
                     if (shutdown == 0 || ActorContext is null)
                         break;

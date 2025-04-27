@@ -173,7 +173,7 @@ public sealed class ActorRunnerAggregate<TActor, TRequest, TResponse>
                     if (shutdown == 0)
                         break;
 
-                    while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse>? message))
+                    while (inbox.TryDequeue(out ActorMessageReply<TRequest, TResponse> message))
                     {
                         if (shutdown == 0)
                             break;

@@ -19,11 +19,6 @@ public readonly struct ActorMessageReply<TRequest, TResponse>
     public IGenericActorRef? Sender { get; }
 
     /// <summary>
-    /// Returns the response of the message.
-    /// </summary>
-    public TResponse? Response { get; private set; }
-
-    /// <summary>
     /// Returns the task completion source of the reply
     /// </summary>
     public TaskCompletionSource<TResponse?> Promise { get; }
