@@ -19,7 +19,7 @@ public class RoundRobinActor<TActor, TRequest> : IActor<TRequest>
 
     private readonly IActorContext<RoundRobinActor<TActor, TRequest>, TRequest> context;
 
-    private readonly List<IActorRef<TActor, TRequest>> instances = new();
+    private readonly List<IActorRef<TActor, TRequest>> instances = [];
 
     /// <summary>
     /// Returns the current list of instances

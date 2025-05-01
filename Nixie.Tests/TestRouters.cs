@@ -360,4 +360,42 @@ public sealed class TestRouters
             Assert.Equal(1, routeeActor.GetMessages());
         }
     }
+    
+    [Fact]
+    public async Task TestCreateBalancingRouterExt()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<BalancingActor<RouteeActor, RouterMessage>, RouterMessage> router =
+            asx.Spawn<BalancingActor<RouteeActor, RouterMessage>, RouterMessage>("my-router", 5);
+        
+        router.Send(new RouterMessage(RouterMessageType.Route, "aaa"));
+        router.Send(new RouterMessage(RouterMessageType.Route, "bbb"));
+        router.Send(new RouterMessage(RouterMessageType.Route, "ccc"));
+        router.Send(new RouterMessage(RouterMessageType.Route, "ddd"));
+        router.Send(new RouterMessage(RouterMessageType.Route, "eee"));
+
+        await asx.Wait();
+
+        Assert.IsAssignableFrom<BalancingActor<RouteeActor, RouterMessage>>(router.Runner.Actor);
+    }
+    
+    [Fact]
+    public async Task TestCreateBalancingSlowRouterExt()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<BalancingActor<RouteeSlowActor, RouterMessage>, RouterMessage> router =
+            asx.Spawn<BalancingActor<RouteeSlowActor, RouterMessage>, RouterMessage>("my-router", 5);
+        
+        router.Send(new RouterMessage(RouterMessageType.Route, "aaa"));
+        router.Send(new RouterMessage(RouterMessageType.Route, "bbb"));
+        router.Send(new RouterMessage(RouterMessageType.Route, "ccc"));
+        router.Send(new RouterMessage(RouterMessageType.Route, "ddd"));
+        router.Send(new RouterMessage(RouterMessageType.Route, "eee"));
+
+        await asx.Wait();
+
+        Assert.IsAssignableFrom<BalancingActor<RouteeSlowActor, RouterMessage>>(router.Runner.Actor);
+    }
 }
