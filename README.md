@@ -1,6 +1,6 @@
 # Nixie
 
-A Lightweight Actor Model Implementation for C#/.NET 
+A lightweight, strongly typed actor model implementation for C#/.NET.
 
 [![Run Tests](https://github.com/andresgutierrez/nixie/actions/workflows/run-tests.yml/badge.svg)](https://github.com/andresgutierrez/nixie/actions/workflows/run-tests.yml)
 [![NuGet](https://img.shields.io/nuget/v/Nixie.svg?style=flat-square)](https://www.nuget.org/packages/Nixie)
@@ -8,66 +8,55 @@ A Lightweight Actor Model Implementation for C#/.NET
 
 ## Overview
 
-Nixie is a lightweight, high-performance implementation of the [actor model](https://en.wikipedia.org/wiki/Actor_model) tailored for the latest versions of C#/.NET. Developed with a focus on type safety, Nixie provides strongly-typed actors and takes full advantage of nullable support, thereby promoting a reduced error-prone codebase and bolstering performance. Built atop the [Task Parallel Library (TPL)](https://learn.microsoft.com/en-us/dotnet/standard/parallel-programming/task-parallel-library-tpl) provided by .NET, it manages the lifecycle of actors diligently, ensuring a seamless and efficient concurrent programming experience.
+Nixie is a small actor framework built on the .NET Task Parallel Library. It focuses on compile-time type safety, nullable reference type support, simple actor lifecycle management, and fast in-process message passing.
 
-### Advantages of using Nixie Actor/Model vs. Traditional Threads Programming
+Actors process messages asynchronously and encapsulate their own state. Callers communicate with actors through typed actor references, using either fire-and-forget `Send` or request/response `Ask`.
 
-1. **Simplified Concurrency Model:** Nixie abstracts away low-level thread management, providing a higher-level concurrency model that is easier to reason about and manage.
-2. **Improved Scalability:** Actor systems can efficiently scale across multiple CPU cores and even multiple machines, whereas managing threads for scalability can be complex and error-prone.
-3. **Enhanced Fault Tolerance:** Nixie include built-in fault tolerance mechanisms, such as supervision strategies, which help to recover from failures gracefully.
-4. **Isolation and Encapsulation:** Each actor encapsulates its state and behavior, reducing the risk of shared state conflicts and making the system more modular and easier to maintain.
-5. **Simplified Error Handling:** Actors can handle errors locally and propagate them in a controlled manner, improving the robustness and reliability of the application.
-6. **Natural Asynchronous Programming:** Actor models promote asynchronous message passing, which can lead to more responsive applications compared to blocking thread-based models.
-7. **Reduced Complexity:** Traditional thread programming can be complex due to the need for synchronization primitives (locks, semaphores, etc.), whereas actor models eliminate the need for these by design.
-8. **Concurrency Safety:** The message-passing nature of actor models inherently avoids many concurrency issues, such as deadlocks and race conditions, which are common in traditional threading.
-9. **Event-Driven Architecture:** Actor models align well with event-driven architectures, enabling more reactive and event-driven design patterns that are suited for modern applications.
-10. **Easier Maintenance:** With clear boundaries and less shared state, actor-based systems are generally easier to maintain and evolve over time compared to traditional thread-based systems.
+## Features
 
-## Features of Nixie
+- **Strongly typed actors:** request and response types are expressed in actor interfaces and actor references.
+- **Fire-and-forget actors:** implement `IActor<TRequest>` and receive messages with `Send`.
+- **Request/response actors:** implement `IActor<TRequest, TResponse>` and receive messages with `Ask` or `Send`.
+- **Struct message support:** use `IActorStruct<TRequest>` and `IActorStruct<TRequest, TResponse>` with `SpawnStruct` to avoid reference-type messages.
+- **Aggregate actors:** use `IActorAggregate<TRequest>` or `IActorAggregate<TRequest, TResponse>` to process queued messages in batches.
+- **Routers:** round-robin and consistent-hash routers are available for class and struct actors.
+- **Actor lookup:** named actors can be resolved later with `Get` or `GetStruct`.
+- **Actor shutdown:** actors can be stopped by name or reference, immediately or through graceful shutdown.
+- **Timers and scheduling:** schedule one-time messages, periodic messages, actor shutdowns, and stop timers.
+- **Sender context:** actors can pass sender references and reply through the sender.
+- **Actor context:** actors receive access to `Self`, `Sender`, `ActorSystem`, `Logger`, and shutdown hooks.
+- **Dependency injection:** actors can be constructed through `IServiceProvider`, including additional spawn arguments.
+- **Logging:** pass an `ILogger` to `ActorSystem` for framework logging.
+- **Wait support:** `ActorSystem.Wait()` waits until current actor queues finish processing.
+- **Nullable enabled:** the library is built with nullable reference types enabled.
 
-- **Strongly-Typed Actors:** Ensuring that your actor interactions are type-safe and as per expectations. High use of [generics](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/types/generics) to ensure that errors related to type mismatches are caught at compile time rather than at runtime. This reduces the risk of runtime exceptions and makes the code more robust.
-- **Nullable Support:** Full support for [nullability](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types) in line with the latest C# features, ensuring your code is robust and safeguarded against null reference issues.
-- **Lifecycle Management:** Nixie handles the meticulous management of actor lifecycle, allowing developers to focus on implementing logic.
-- **High Performance:** Thanks to being lightweight and leveraging the powerful TPL, Nixie ensures that your actor systems are both scalable and performant. Additionally the use of Generics eliminate the need for boxing and unboxing when working with value types, which can improve performance (Boxing is the process of converting a value type to an object type, and unboxing is the reverse).
-- **Less Error Prone:** The strongly-typed nature and nullability checks inherently make your actor system more reliable and resilient.
-- **Built on TPL:** Make the most out of the robust, scalable, and performant asynchronous programming features offered by TPL.
-- **Multi-Threading:** To increase throughput, Nixie makes use of thread-safe structures that avoid locks wherever possible and use fine-grained locking where locks are necessary. Abstracting the complexities of multithreaded programming into an API that is easy to use and understand.
-- **Production-Ready:** Nixie has been tested in production environments with many concurrent users, ensuring reliability and stability under real-world conditions.
-
-## Getting Started
-
-### Prerequisites
+## Requirements
 
 - .NET SDK 8.0 or later
-- A suitable IDE (e.g., Visual Studio, Visual Studio Code, or Rider)
+- C# nullable reference types are recommended
 
-### Installation
+The package targets `net8.0`.
 
-To install Nixie into your C#/.NET project, you can use the .NET CLI or the NuGet Package Manager.
+## Installation
 
-#### Using .NET CLI
-
-```shell
-dotnet add package Nixie --version 1.1.1
-```
-
-### Using NuGet Package Manager
-
-Search for Nixie and install it from the NuGet package manager UI, or use the Package Manager Console:
+Using the .NET CLI:
 
 ```shell
-Install-Package Nixie -Version 1.1.1
+dotnet add package Nixie --version 1.1.5
 ```
 
-## Usage
+Using the NuGet Package Manager Console:
 
-Here's a basic example to get you started with Nixie. More comprehensive documentation and usage examples can be found in the /docs folder:
+```shell
+Install-Package Nixie -Version 1.1.5
+```
 
+## Basic Usage
 
 ```csharp
 using Nixie;
 
-public class GreetMessage
+public sealed class GreetMessage
 {
     public string Greeting { get; }
 
@@ -77,42 +66,370 @@ public class GreetMessage
     }
 }
 
-public class GreeterActor : IActor<GreetMessage>
-{    
-    public GreeterActor(IActorContext<GreeterActor, GreetMessage> _)
-    {
-
-    }
-
-    public async Task Receive(GreetMessage message)
+public sealed class GreeterActor : IActor<GreetMessage>
+{
+    public Task Receive(GreetMessage message)
     {
         Console.WriteLine("Message: {0}", message.Greeting);
+        return Task.CompletedTask;
     }
 }
 
-var system = new ActorSystem();
+using ActorSystem system = new();
 
-var greeter = system.Spawn<GreeterActor, GreetMessage>();
+IActorRef<GreeterActor, GreetMessage> greeter =
+    system.Spawn<GreeterActor, GreetMessage>();
 
 greeter.Send(new GreetMessage("Hello, Nixie!"));
+
+await system.Wait();
 ```
 
-## Contribution
+## Actor Types
 
-Nixie is an open-source project, and contributions are heartily welcomed! Whether you are looking to fix bugs, add new features, or improve documentation, your efforts and contributions will be appreciated. Check out the [CONTRIBUTING](CONTRIBUTING.md) file for guidelines on how to get started with contributing to Nixie.
+### Fire-And-Forget Actors
+
+Implement `IActor<TRequest>` when the actor processes messages without returning a response.
+
+```csharp
+public sealed class CounterActor : IActor<string>
+{
+    private int count;
+
+    public Task Receive(string message)
+    {
+        count++;
+        return Task.CompletedTask;
+    }
+}
+
+IActorRef<CounterActor, string> counter =
+    system.Spawn<CounterActor, string>("counter");
+
+counter.Send("increment");
+```
+
+### Request/Response Actors
+
+Implement `IActor<TRequest, TResponse>` when callers need a response.
+
+```csharp
+public sealed class EchoActor : IActor<string, string>
+{
+    public Task<string?> Receive(string message)
+    {
+        return Task.FromResult<string?>(message);
+    }
+}
+
+IActorRef<EchoActor, string, string> echo =
+    system.Spawn<EchoActor, string, string>();
+
+string? reply = await echo.Ask("hello", TimeSpan.FromSeconds(2));
+```
+
+`Ask` supports overloads with a timeout and with an explicit sender. When the timeout is reached, Nixie throws `AskTimeoutException`.
+
+### Struct Actors
+
+Use struct actors for value-type request and response messages.
+
+```csharp
+public readonly record struct Add(int Left, int Right);
+public readonly record struct Sum(int Value);
+
+public sealed class CalculatorActor : IActorStruct<Add, Sum>
+{
+    public Task<Sum> Receive(Add message)
+    {
+        return Task.FromResult(new Sum(message.Left + message.Right));
+    }
+}
+
+IActorRefStruct<CalculatorActor, Add, Sum> calculator =
+    system.SpawnStruct<CalculatorActor, Add, Sum>();
+
+Sum sum = await calculator.Ask(new Add(2, 3));
+```
+
+### Aggregate Actors
+
+Aggregate actors receive batches instead of individual messages. They are useful when many queued messages can be processed more efficiently together.
+
+```csharp
+public sealed class BatchActor : IActorAggregate<string>
+{
+    public Task Receive(List<string> messages)
+    {
+        Console.WriteLine("Batch size: {0}", messages.Count);
+        return Task.CompletedTask;
+    }
+}
+
+IActorRefAggregate<BatchActor, string> batch =
+    system.SpawnAggregate<BatchActor, string>();
+
+batch.Send("one");
+batch.Send("two");
+await system.Wait();
+```
+
+Aggregate request/response actors implement `IActorAggregate<TRequest, TResponse>` and receive `List<ActorMessageReply<TRequest, TResponse>>`.
+
+## Actor Context
+
+Actors can ask for a typed context in their constructor. Nixie injects the context automatically.
+
+```csharp
+public sealed class ParentActor : IActor<string>
+{
+    private readonly IActorContext<ParentActor, string> context;
+    private readonly IActorRef<ChildActor, string> child;
+
+    public ParentActor(IActorContext<ParentActor, string> context)
+    {
+        this.context = context;
+        child = context.ActorSystem.Spawn<ChildActor, string>();
+    }
+
+    public Task Receive(string message)
+    {
+        child.Send(message, context.Self);
+        return Task.CompletedTask;
+    }
+}
+```
+
+Context properties include:
+
+- `ActorSystem`: the owning actor system.
+- `Self`: a reference to the current actor.
+- `Sender`: the sender reference, when one was supplied.
+- `Logger`: the logger passed to `ActorSystem`, if any.
+- `OnPostShutdown`: event invoked when the actor is shut down.
+
+Request/response contexts also expose `Reply` and `ByPassReply` for advanced response handling.
+
+## Spawning And Lookup
+
+Actors can be unnamed or named. Named actors are unique per actor type within an actor system.
+
+```csharp
+IActorRef<CounterActor, string> counter =
+    system.Spawn<CounterActor, string>("counter");
+
+IActorRef<CounterActor, string>? existing =
+    system.Get<CounterActor, string>("counter");
+```
+
+Spawning a second actor with the same actor type and name throws `NixieException`.
+
+You can pass additional constructor arguments after the optional name:
+
+```csharp
+IActorRef<ConfiguredActor, string> actor =
+    system.Spawn<ConfiguredActor, string>(null, 100, "mode-a");
+```
+
+## Dependency Injection
+
+Pass an `IServiceProvider` to `ActorSystem` to let Nixie resolve actor constructor dependencies.
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Nixie;
+
+IServiceCollection services = new ServiceCollection();
+services.AddSingleton<IMyService, MyService>();
+
+using ServiceProvider provider = services.BuildServiceProvider();
+using ActorSystem system = new(provider);
+
+IActorRef<MyActor, string> actor = system.Spawn<MyActor, string>();
+```
+
+DI can be combined with spawn arguments. Nixie provides the actor context, resolves registered services, and uses the extra arguments supplied to `Spawn`.
+
+## Routers
+
+Router extension methods live in the `Nixie.Routers` namespace.
+
+```csharp
+using Nixie.Routers;
+
+IActorRef<RoundRobinActor<WorkerActor, WorkItem>, WorkItem> router =
+    system.CreateRoundRobinRouter<WorkerActor, WorkItem>("workers", instances: 4);
+
+router.Send(new WorkItem("job-1"));
+```
+
+Round-robin routers distribute messages across routees in order. You can create routees automatically by passing an instance count, or pass an existing list of actor references.
+
+```csharp
+List<IActorRef<WorkerActor, WorkItem>> workers = new()
+{
+    system.Spawn<WorkerActor, WorkItem>(),
+    system.Spawn<WorkerActor, WorkItem>()
+};
+
+IActorRef<RoundRobinActor<WorkerActor, WorkItem>, WorkItem> router =
+    system.CreateRoundRobinRouter("workers", workers);
+```
+
+Consistent-hash routers require request messages to implement `IConsistentHashable`.
+
+```csharp
+public sealed class WorkItem : IConsistentHashable
+{
+    public string Key { get; }
+
+    public WorkItem(string key)
+    {
+        Key = key;
+    }
+
+    public int GetHash()
+    {
+        return Key.GetHashCode();
+    }
+}
+
+IActorRef<ConsistentHashActor<WorkerActor, WorkItem>, WorkItem> router =
+    system.CreateConsistentHashRouter<WorkerActor, WorkItem>("hashed-workers", 4);
+```
+
+Struct router variants are available through `CreateRoundRobinRouterStruct` and `CreateConsistentHashRouterStruct`.
+
+## Timers And Scheduling
+
+Schedule a message once:
+
+```csharp
+system.ScheduleOnce(counter, "increment", TimeSpan.FromSeconds(1));
+```
+
+Start and stop a periodic timer:
+
+```csharp
+system.StartPeriodicTimer(
+    counter,
+    "counter-timer",
+    "increment",
+    initialDelay: TimeSpan.Zero,
+    interval: TimeSpan.FromSeconds(1));
+
+system.StopPeriodicTimer(counter, "counter-timer");
+```
+
+Stop all timers for an actor:
+
+```csharp
+system.StopAllTimers(counter);
+```
+
+Schedule actor shutdown:
+
+```csharp
+system.ScheduleShutdown(counter, TimeSpan.FromMinutes(5));
+```
+
+Struct actor timer variants are available through `ScheduleOnceStruct` and `StartPeriodicTimerStruct`.
+
+## Shutdown
+
+Actors can be shut down by name or by reference.
+
+```csharp
+bool stoppedByName = system.Shutdown<CounterActor, string>("counter");
+bool stoppedByRef = system.Shutdown(counter);
+```
+
+Graceful shutdown waits until the actor confirms shutdown within the specified timeout.
+
+```csharp
+bool stopped = await system.GracefulShutdown(counter, TimeSpan.FromSeconds(5));
+```
+
+Struct actors use `ShutdownStruct` and `GracefulShutdownStruct`.
+
+Actors can subscribe to post-shutdown cleanup through context:
+
+```csharp
+public sealed class CleanupActor : IActor<string>
+{
+    public CleanupActor(IActorContext<CleanupActor, string> context)
+    {
+        context.OnPostShutdown += () => Console.WriteLine("cleaned up");
+    }
+
+    public Task Receive(string message) => Task.CompletedTask;
+}
+```
+
+## Waiting For Work
+
+`ActorSystem.Wait()` waits until currently known repositories have no pending messages and no actor is processing.
+
+```csharp
+actor.Send("message");
+await system.Wait();
+```
+
+This is useful in tests, command-line tools, and controlled shutdown flows.
+
+## Logging
+
+Pass an `ILogger` to the actor system:
+
+```csharp
+using Microsoft.Extensions.Logging;
+
+using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.AddConsole();
+});
+
+using ActorSystem system = new(logger: loggerFactory.CreateLogger("Nixie"));
+```
+
+The logger is also available to actors through their context.
+
+## LazyTask
+
+Nixie includes `LazyTask<T>` and `LazyTaskMethodBuilder` support for lazily started async methods.
+
+```csharp
+private async LazyTask<MyResult> CreateResultAsync()
+{
+    await Task.Delay(100);
+    return new MyResult();
+}
+
+LazyTask<MyResult> task = CreateResultAsync();
+MyResult result = await task;
+```
+
+## Development
+
+Clone the repository and run tests:
+
+```shell
+dotnet test
+```
+
+The solution contains:
+
+- `Nixie`: the actor framework.
+- `Nixie.Tests`: xUnit tests covering actors, replies, routers, scheduling, DI, shutdown, logging, hashing, and `LazyTask`.
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-Nixie is released under the MIT License.
+Nixie is released under the MIT License. See [LICENSE](LICENSE).
 
-## Name origin
+## Name Origin
 
-[Nixies](https://en.wikipedia.org/wiki/Nixie_(folklore)) are mysterious shapeshifting water spirits in Germanic mythology and folklore. 
-
-## Acknowledgements
-
-Sincere thanks to all contributors and the C#/.NET community for the continual support and inspiration.
-
----
-
-Let's build robust and efficient actor systems with Nixie! 🚀
+[Nixies](https://en.wikipedia.org/wiki/Nixie_(folklore)) are shapeshifting water spirits in Germanic folklore.

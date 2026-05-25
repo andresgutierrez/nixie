@@ -18,6 +18,11 @@ public class BalancingActor<TActor, TRequest> : IActor<TRequest>
     /// Returns the current list of instances
     /// </summary>
     public List<IActorRef<TActor, TRequest>> Instances => instances;
+    
+    /// <summary>
+    /// Random number generator
+    /// </summary>
+    private readonly Random random = new();
 
     /// <summary>
     /// Constructor
@@ -56,9 +61,25 @@ public class BalancingActor<TActor, TRequest> : IActor<TRequest>
     /// <returns></returns>
     public Task Receive(TRequest message)
     {
+        int number = random.Next(0, instances.Count);
+        
         // Step 1. Find a router that is not processing messages
-        foreach (IActorRef<TActor, TRequest> instance in instances)
+        for (int i = number; i < instances.Count; i++)
         {
+            IActorRef<TActor, TRequest> instance = instances[i];
+            
+            if (instance.Runner.IsProcessing)
+                continue;
+            
+            instance.Send(message);
+            return Task.CompletedTask;
+        }
+        
+        // Step 1.b. Find a router that is not processing messages
+        for (int i = 0; i < number; i++)
+        {
+            IActorRef<TActor, TRequest> instance = instances[i];
+            
             if (instance.Runner.IsProcessing)
                 continue;
             
@@ -67,8 +88,22 @@ public class BalancingActor<TActor, TRequest> : IActor<TRequest>
         }
         
         // Step 2. Find a router where is queue is empty (next to be free)
-        foreach (IActorRef<TActor, TRequest> instance in instances)
+        for (int i = number; i < instances.Count; i++)
         {
+            IActorRef<TActor, TRequest> instance = instances[i];
+            
+            if (!instance.Runner.IsEmpty)
+                continue;
+            
+            instance.Send(message);
+            return Task.CompletedTask;
+        }
+        
+        // Step 2.b Find a router where is queue is empty (next to be free)
+        for (int i = 0; i < number; i++)
+        {
+            IActorRef<TActor, TRequest> instance = instances[i];
+            
             if (!instance.Runner.IsEmpty)
                 continue;
             

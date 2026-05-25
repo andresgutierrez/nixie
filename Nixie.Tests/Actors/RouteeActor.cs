@@ -50,7 +50,7 @@ public sealed class RouteeActor : IActor<RouterMessage>
         return receivedMessages;
     }
 
-    public void IncrMessage()
+    private void IncrMessage()
     {
         receivedMessages++;
     }
