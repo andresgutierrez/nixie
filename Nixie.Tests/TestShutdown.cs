@@ -447,4 +447,59 @@ public sealed class TestShutdown
         IActorRefStruct<ShutdownActorStruct, int>? actor2 = asx.GetStruct<ShutdownActorStruct, int>("my-actor");
         Assert.Null(actor2);
     }
+
+    [Fact]
+    public async Task TestGracefulShutdownAllRemovesActorsFromAllRepositories()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<ShutdownActor, string> actor = asx.Spawn<ShutdownActor, string>("shutdown-actor");
+        IActorRef<ShutdownReplyActor, string, string> replyActor = asx.Spawn<ShutdownReplyActor, string, string>("shutdown-reply-actor");
+        IActorRefStruct<ShutdownActorStruct, int> structActor = asx.SpawnStruct<ShutdownActorStruct, int>("shutdown-struct-actor");
+        IActorRefStruct<ReplyActorStruct, int, int> structReplyActor = asx.SpawnStruct<ReplyActorStruct, int, int>("shutdown-struct-reply-actor");
+        IActorRefAggregate<FireAndForgetAggregateActor, string> aggregateActor = asx.SpawnAggregate<FireAndForgetAggregateActor, string>("shutdown-aggregate-actor");
+        IActorRefAggregate<ReplyAggregateActor, string, string> aggregateReplyActor = asx.SpawnAggregate<ReplyAggregateActor, string, string>("shutdown-aggregate-reply-actor");
+
+        actor.Send("message");
+        replyActor.Send("message");
+        structActor.Send(1);
+        structReplyActor.Send(1);
+        aggregateActor.Send("message");
+        aggregateReplyActor.Send("message");
+
+        await asx.Wait();
+
+        await asx.GracefulShutdownAll(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(1, ((ShutdownActor)actor.Runner.Actor!).GetMessages());
+        Assert.Equal(1, ((ShutdownReplyActor)replyActor.Runner.Actor!).GetMessages());
+        Assert.Equal(1, ((ShutdownActorStruct)structActor.Runner.Actor!).GetMessages());
+        Assert.Equal(1, ((ReplyActorStruct)structReplyActor.Runner.Actor!).GetMessages(1));
+        Assert.Equal(1, ((FireAndForgetAggregateActor)aggregateActor.Runner.Actor!).GetMessages("message"));
+        Assert.Equal(1, ((ReplyAggregateActor)aggregateReplyActor.Runner.Actor!).GetMessages("message"));
+
+        Assert.Null(asx.Get<ShutdownActor, string>("shutdown-actor"));
+        Assert.Null(asx.Get<ShutdownReplyActor, string, string>("shutdown-reply-actor"));
+        Assert.Null(asx.GetStruct<ShutdownActorStruct, int>("shutdown-struct-actor"));
+        Assert.Null(asx.GetRepositoryStruct<ReplyActorStruct, int, int>().Get("shutdown-struct-reply-actor"));
+        Assert.Null(asx.GetRepositoryAggregate<FireAndForgetAggregateActor, string>().Get("shutdown-aggregate-actor"));
+        Assert.Null(asx.GetRepositoryAggregate<ReplyAggregateActor, string, string>().Get("shutdown-aggregate-reply-actor"));
+    }
+
+    [Fact]
+    public async Task TestGracefulShutdownAllWaitsForQueuedMessages()
+    {
+        using ActorSystem asx = new();
+
+        IActorRef<ShutdownSlowActor, string> actor = asx.Spawn<ShutdownSlowActor, string>("slow-actor");
+
+        actor.Send("message");
+        actor.Send("message");
+        actor.Send("message");
+
+        await asx.GracefulShutdownAll(TimeSpan.FromSeconds(5));
+
+        Assert.Equal(3, ((ShutdownSlowActor)actor.Runner.Actor!).GetMessages());
+        Assert.Null(asx.Get<ShutdownSlowActor, string>("slow-actor"));
+    }
 }

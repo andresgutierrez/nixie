@@ -252,12 +252,24 @@ public sealed class ActorRepository<TActor, TRequest, TResponse> : IActorReposit
 
         if (actors.TryGetValue(name, out Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>? actor))
         {
-            bool success = await actor.Value.runner.GracefulShutdown(maxWait);            
+            bool success = await actor.Value.runner.GracefulShutdown(maxWait);
             actors.TryRemove(name, out _);
             actorSystem.StopAllTimers(actor.Value.actorRef);
-            return success;            
+            return success;
         }
 
         return true;
+    }
+
+    public async Task GracefulShutdownAll(TimeSpan maxWait)
+    {
+        List<Task<bool>> tasks = new(actors.Count);
+
+        foreach (KeyValuePair<string, Lazy<(ActorRunner<TActor, TRequest, TResponse> runner, ActorRef<TActor, TRequest, TResponse> actorRef)>> kv in actors)
+            tasks.Add(kv.Value.Value.runner.GracefulShutdown(maxWait).AsTask());
+
+        await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        actors.Clear();
     }
 }

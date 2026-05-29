@@ -260,4 +260,16 @@ public sealed class ActorRepositoryStruct<TActor, TRequest> : IActorRepositoryRu
 
         return true;
     }
+
+    public async Task GracefulShutdownAll(TimeSpan maxWait)
+    {
+        List<Task<bool>> tasks = new(actors.Count);
+
+        foreach (KeyValuePair<string, Lazy<(ActorRunnerStruct<TActor, TRequest> runner, ActorRefStruct<TActor, TRequest> actorRef)>> kv in actors)
+            tasks.Add(kv.Value.Value.runner.GracefulShutdown(maxWait).AsTask());
+
+        await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        actors.Clear();
+    }
 }

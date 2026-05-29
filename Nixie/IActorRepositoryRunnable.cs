@@ -17,4 +17,10 @@ public interface IActorRepositoryRunnable
     /// </summary>
     /// <returns></returns>
     public bool IsProcessing(out string? actorName);
+
+    /// <summary>
+    /// Signals all actors in this repository to stop accepting new messages and waits up to
+    /// <paramref name="maxWait"/> for in-flight processing to drain.
+    /// </summary>
+    public Task GracefulShutdownAll(TimeSpan maxWait);
 }

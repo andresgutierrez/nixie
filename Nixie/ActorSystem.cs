@@ -849,6 +849,21 @@ public sealed class ActorSystem : IDisposable
         }
     }
 
+    /// <summary>
+    /// Signals all actors in every repository to stop accepting messages and waits up to
+    /// <paramref name="maxWait"/> for in-flight processing to complete before returning.
+    /// Call this before <see cref="Dispose"/> to ensure a clean, deterministic teardown.
+    /// </summary>
+    public async Task GracefulShutdownAll(TimeSpan maxWait)
+    {
+        List<Task> tasks = new(repositories.Count);
+
+        foreach (KeyValuePair<Type, Lazy<IActorRepositoryRunnable>> kv in repositories)
+            tasks.Add(kv.Value.Value.GracefulShutdownAll(maxWait));
+
+        await Task.WhenAll(tasks).ConfigureAwait(false);
+    }
+
     public void Dispose()
     {
         scheduler.Dispose();

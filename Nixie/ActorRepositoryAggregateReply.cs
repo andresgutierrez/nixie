@@ -261,4 +261,16 @@ public sealed class ActorRepositoryAggregate<TActor, TRequest, TResponse> : IAct
 
         return true;
     }
+
+    public async Task GracefulShutdownAll(TimeSpan maxWait)
+    {
+        List<Task<bool>> tasks = new(actors.Count);
+
+        foreach (KeyValuePair<string, Lazy<(ActorRunnerAggregate<TActor, TRequest, TResponse> runner, ActorRefAggregate<TActor, TRequest, TResponse> actorRef)>> kv in actors)
+            tasks.Add(kv.Value.Value.runner.GracefulShutdown(maxWait).AsTask());
+
+        await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        actors.Clear();
+    }
 }
